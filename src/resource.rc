@@ -1,0 +1,133 @@
+#include <windows.h>
+#include <commctrl.h>
+#include "timevertor.h"
+#include "resource.h"
+
+LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
+
+//
+// Menu resources
+//
+IDM_MAIN MENU
+{
+    POPUP "File"
+    {
+        MENUITEM "Settings", IDM_SETTINGS
+        MENUITEM SEPARATOR
+        MENUITEM "Exit\tEsc", IDM_EXIT
+    }
+    POPUP "Edit"
+    {
+        MENUITEM "Copy to clipboard (Windows)", IDM_COPY_WINDOWS
+        MENUITEM "Copy to clipboard (Unix)", IDM_COPY_UNIX
+    }
+    POPUP "Help"
+    {
+        MENUITEM "Website", IDM_WEBSITE
+        MENUITEM "Check for updates", IDM_CHECK_UPDATES
+        MENUITEM "About", IDM_ABOUT
+    }
+}
+
+//
+// Dialog resources
+//
+IDD_MAIN DIALOGEX 0, 0, 220, 84
+STYLE DS_CENTER | WS_POPUP | WS_SYSMENU | WS_CAPTION | DS_MODALFRAME | DS_SHELLFONT | WS_GROUP | WS_VISIBLE
+CAPTION APP_NAME
+MENU IDM_MAIN
+FONT 8, "Ms Shell Dlg"
+{
+    AUTORADIOBUTTON "", IDC_WINDOWS_RB, 5, 10, 10, 14, BS_VCENTER
+    CONTROL         "", IDC_WINDOWS_TIME, DATETIMEPICK_CLASS, WS_TABSTOP | DTS_LONGDATEFORMAT | DTS_APPCANPARSE | DTS_RIGHTALIGN, 20, 10, 175, 15
+	PUSHBUTTON		"<", IDC_WINDOWS_CURRENT_BTN, 199, 10, 14, 14
+
+    AUTORADIOBUTTON "", IDC_UNIX_RB, 5, 33, 10, 14, BS_VCENTER
+	EDITTEXT        IDC_UNIX_TIME, 20, 33, 175, 14, ES_AUTOHSCROLL | ES_NUMBER
+	PUSHBUTTON		"<", IDC_UNIX_CURRENT_BTN, 199, 33, 14, 14
+
+    DEFPUSHBUTTON   "Convert", IDC_CONVERT, 144, 64, 70, 14
+}
+
+IDD_SETTINGS DIALOGEX 0, 0, 242, 186
+STYLE WS_POPUP | WS_SYSMENU | WS_CAPTION | DS_MODALFRAME | DS_SHELLFONT
+CAPTION "Settings"
+FONT 8, "Ms Shell Dlg"
+{
+    LTEXT           "General options", IDC_LABEL_1, 8, 8, 226, 8, SS_LEFT | SS_CENTERIMAGE
+    AUTOCHECKBOX    "Check updates at startup", IDC_CHECK_UPDATE_AT_STARTUP_CHK, 8, 20, 226, 10
+    AUTOCHECKBOX    "Always on top", IDC_ALWAYS_ON_TOP_CHK, 8, 30, 226, 10
+	
+    LTEXT           "Date options (Windows)", IDC_LABEL_2, 8, 48, 226, 8, SS_LEFT | SS_CENTERIMAGE
+    AUTOCHECKBOX    "Use ""Date Time Picker"" as input field", IDC_ENABLE_WINDOWS_EDIT_CHK, 8, 60, 226, 10
+	AUTOCHECKBOX    "Use our date format (otherwise - default)", IDC_ENABLE_FORMAT_CHK, 8, 70, 226, 10
+	EDITTEXT        IDC_WINDOWS_FORMAT_EDIT, 8, 86, 226, 14, ES_AUTOHSCROLL
+	LTEXT           "TIP: Move mouse pointer over input box for show tip", IDC_WINDOWS_FORMAT_STATIC, 8, 104, 226, 8, SS_LEFT
+
+    LTEXT           "Language", IDC_LABEL_3, 8, 122, 226, 8, SS_LEFT | SS_CENTERIMAGE
+	COMBOBOX        IDC_LANGUAGE_CB, 8, 134, 134, 14, CBS_DROPDOWNLIST | CBS_HASSTRINGS
+	CONTROL			"", IDC_LANGUAGE_INFO, WC_LINK, LWS_USEVISUALSTYLE, 149, 136, 85, 10
+
+    DEFPUSHBUTTON   "Apply", IDC_OK, 133, 166, 50, 14
+    PUSHBUTTON      "Close", IDC_CANCEL, 185, 166, 50, 14
+}
+
+//
+// String resources
+//
+STRINGTABLE
+{
+	IDS_TRANSLATION_INFO "English (by <a href=""http://www.henrypp.org"">Henry++</a>)"
+
+	IDS_UPDATE_NO "You're using latest version of the program"
+	IDS_UPDATE_YES "An update for program is now available: %s\r\nDo you want to open the download page?"
+	IDS_UPDATE_ERROR "Error while connection to update server"
+
+	IDS_ABOUT "About"
+	IDS_COPYRIGHT "This program is redistribute under the terms of the GNU General Public License v2, see license for details.\r\n\r\nThis software is provided ""as is"" and without any express or implied warranties.\r\n\r\n<a href=""%s"">%s</a>"
+
+	IDS_WINDOWS_FORMAT "d\tday (1 or 2 digits)\r\ndd\tday (2 digits)\r\n\r\nddd\tweekday abbreviation (3 letters)\r\ndddd\tfull weekday name\r\n\r\nM\tmonth (1 or 2 digits)\r\nMM\tmonth (2 digits)\r\nMMM\tmonth abbreviation (3 letters)\r\nMMMM\tfull month name\r\n\r\nyy\tlast two digits of the year (2 digits)\r\nyyyy\tfull year (4 digits)\r\n\r\nh\thour in 12-hour format (1 or 2 digits)\r\nhh\thour in 12-hour format (2 digits)\r\nH\thour in 24-hour format (1 or 2 digits)\r\nHH\thour in 24-hour format (2 digits)\r\n\r\nm\tminute (1 or 2 digits)\r\nmm\tminute (2 digits)\r\n\r\ns\tsecond (1 or 2 digits)\r\nss\tsecond (2 digits)\r\n\r\nt\tAM/PM abbreviation (1 letter)\r\ntt\tAM/PM abbreviation (2 letter)"
+	
+	IDS_W2U "Windows to Unix"
+	IDS_U2W "Unix to Windows"
+
+	IDS_CURRENT_TIME "Insert current time"
+	IDS_REQUIRED_FIELD "Required field"
+}
+
+//
+// Icon resources
+//
+IDI_MAIN	       		ICON           "res\\main.ico"
+
+//
+// Version Information resources
+//
+1 VERSIONINFO
+	FILEVERSION     APP_VERSION_RES
+    PRODUCTVERSION  APP_VERSION_RES
+    FILEOS          VOS__WINDOWS32
+    FILETYPE        VFT_APP
+    FILESUBTYPE     VFT2_UNKNOWN
+    FILEFLAGSMASK   0x00000000
+    FILEFLAGS       0x00000000
+{
+    BLOCK "StringFileInfo"
+    {
+        BLOCK "040904B0"
+        {
+            VALUE "Comments", APP_WEBSITE
+            VALUE "CompanyName", "Henry++"
+            VALUE "LegalCopyright", "Copyright © 2012 Henry++"
+            VALUE "OriginalFilename", APP_NAME_SHORT ".exe"
+            VALUE "FileDescription", APP_NAME
+			VALUE "FileVersion", APP_VERSION
+			VALUE "ProductName", APP_NAME
+            VALUE "ProductVersion", APP_VERSION
+        }
+    }
+    BLOCK "VarFileInfo"
+    {
+        VALUE "Translation", 0x0409, 1200
+    }
+}
