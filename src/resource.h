@@ -5,72 +5,101 @@
 #define IDC_STATIC (-1)
 #endif
 
-// Dialogs
-#define IDD_MAIN	                            100
-#define IDD_SETTINGS                            101
+// Menu Id
+#define IDM_MAIN 100
+#define IDM_LISTVIEW 101
 
-// Menus
-#define IDM_MAIN		                        100
+// Dialogs
+#define IDD_MAIN 100
+#define IDD_SETTINGS 101
+#define IDD_SETTINGS_1 102
 
 // Main Dlg
-#define IDC_WINDOWS_RB							100
-#define IDC_WINDOWS_TIME	                    101
-#define IDC_WINDOWS_CURRENT_BTN	                102
-
-#define IDC_UNIX_RB								103
-#define IDC_UNIX_TIME							104
-#define IDC_UNIX_CURRENT_BTN					105
-
-#define IDC_CONVERT								106
+#define IDC_INPUT 100
+#define IDC_CURRENT 101
+#define IDC_LISTVIEW 102
 
 // Settings Dlg
-#define IDC_CHECK_UPDATE_AT_STARTUP_CHK			100
-#define IDC_ALWAYS_ON_TOP_CHK					101
+#define IDC_NAV 1000
+#define IDC_APPLY 1001
+#define IDC_CLOSE 1002
 
-#define IDC_ENABLE_WINDOWS_EDIT_CHK				102
-#define IDC_ENABLE_FORMAT_CHK					103
-#define IDC_WINDOWS_FORMAT_EDIT					104
-#define IDC_WINDOWS_FORMAT_STATIC				105
+#define IDC_TITLE_1 1003
+#define IDC_TITLE_2 1004
 
-#define IDC_LANGUAGE_CB							106
-#define IDC_LANGUAGE_INFO						107
+#define IDC_ALWAYSONTOP_CHK 100
+#define IDC_CHECKUPDATES_CHK 101
 
-// Common Controls
-#define IDC_OK									200
-#define IDC_CANCEL								201
+#define IDC_LANGUAGE_HINT 102
+#define IDC_LANGUAGE 103
 
-#define IDC_LABEL_1								203
-#define IDC_LABEL_2								204
-#define IDC_LABEL_3								205
+#define IDC_FORMAT_TEXT 104
+#define IDC_FORMAT_RFC822 105
+#define IDC_FORMAT_ISO8601 106
+#define IDC_FORMAT_UNIXTIME 107
+#define IDC_FORMAT_MACTIME 108
+#define IDC_FORMAT_MICROSOFTTIME 109
+#define IDC_FORMAT_FILETIME 110
 
 // Main Menu
-#define IDM_SETTINGS							40000
-#define IDM_EXIT                                40001
-#define IDM_COPY_WINDOWS						40002
-#define IDM_COPY_UNIX			                40003
-#define IDM_WEBSITE                             40004
-#define IDM_CHECK_UPDATES		                40005
-#define IDM_ABOUT                               40006
+#define IDM_SETTINGS 2000
+#define IDM_EXIT 2001
+#define IDM_WEBSITE 2002
+#define IDM_DONATE 2003
+#define IDM_CHECKUPDATES 2004
+#define IDM_ABOUT 2005
+
+// Listview Menu
+#define IDM_COPY 3000
 
 // Strings
-#define IDS_TRANSLATION_INFO					1000
+#define IDS_UPDATE_NO 1000
+#define IDS_UPDATE_YES 1001
 
-#define IDS_UPDATE_NO                           10000
-#define IDS_UPDATE_YES                          10001
-#define IDS_UPDATE_ERROR                        10002
+#define IDS_FILE 1002
+#define IDS_SETTINGS 1003
+#define IDS_EXIT 1004
+#define IDS_HELP 1005
+#define IDS_WEBSITE 1006
+#define IDS_DONATE 1007
+#define IDS_CHECKUPDATES 1008
+#define IDS_ABOUT 1009
 
-#define IDS_ABOUT								10003
-#define IDS_COPYRIGHT							10004
+#define IDS_COPY 1010
 
-#define IDS_WINDOWS_FORMAT						10005
+#define IDS_SETTINGS_1 1011
 
-#define IDS_W2U									10006
-#define IDS_U2W									10007
+#define IDS_APPLY 1012
+#define IDS_CLOSE 1013
 
-#define IDS_CURRENT_TIME						10008
-#define IDS_REQUIRED_FIELD						10009
+#define IDS_TITLE_1 1014
+#define IDS_TITLE_2 1015
+#define IDS_TITLE_3 1016
+
+#define IDS_ALWAYSONTOP_CHK 2000
+#define IDS_CHECKUPDATES_CHK 2001
+
+#define IDS_LANGUAGE_HINT 2002
+
+#define IDS_FORMAT_TEXT 2003
+#define IDS_FORMAT_RFC822 2004
+#define IDS_FORMAT_ISO8601 2005
+#define IDS_FORMAT_UNIXTIME 2006
+#define IDS_FORMAT_MACTIME 2007
+#define IDS_FORMAT_MICROSOFTTIME 2008
+#define IDS_FORMAT_FILETIME 2009
+
+#define IDS_FORMAT_DESCRIPTION_1 2010
+#define IDS_FORMAT_DESCRIPTION_2 2011
+#define IDS_FORMAT_DESCRIPTION_3 2012
+#define IDS_FORMAT_DESCRIPTION_4 2013
+#define IDS_FORMAT_DESCRIPTION_5 2014
+#define IDS_FORMAT_DESCRIPTION_6 2015
+#define IDS_FORMAT_DESCRIPTION_7 2016
+
+#define IDS_CURRENT 2017
 
 // Icons
-#define IDI_MAIN	                            100
+#define IDI_MAIN 100
 
-#endif
+#endif // __RESOURCE_H__

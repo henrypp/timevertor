@@ -1,44 +1,56 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Header">
-      <UniqueIdentifier>{4d830a72-6829-4cbf-9a41-d4c19c5deaf4}</UniqueIdentifier>
+    <Filter Include="Source Files">
+      <UniqueIdentifier>{F51039A8-96C5-4E73-A09E-96BBC43ED68E}</UniqueIdentifier>
+      <Extensions>cpp;c;cc;cxx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
     </Filter>
-    <Filter Include="Resource">
-      <UniqueIdentifier>{ac186bd8-846e-4975-9377-a5bbf2634127}</UniqueIdentifier>
+    <Filter Include="Header Files">
+      <UniqueIdentifier>{4FC0369F-DB1E-4BD0-87A2-4DECA59DBD83}</UniqueIdentifier>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
-    <Filter Include="Source">
-      <UniqueIdentifier>{48e5b269-56c3-454b-a505-2ad226b673f2}</UniqueIdentifier>
+    <Filter Include="Resource Files">
+      <UniqueIdentifier>{4A4DC27C-2837-44F0-B866-390169941736}</UniqueIdentifier>
+      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include=".\src\timevertor.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="..\routine\routine.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\ini.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="src\main.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\routine.cpp">
-      <Filter>Source</Filter>
+    <ClCompile Include="..\routine\rstring.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\routine\rapp.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include=".\src\timevertor.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="..\routine\routine.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include=".\src\resource.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="src\main.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\ini.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="src\resource.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\routine.h">
-      <Filter>Header</Filter>
+    <ClInclude Include="..\routine\rconfig.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\routine\rstring.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\routine\rapp.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include=".\src\resource.rc">
-      <Filter>Resource</Filter>
+    <ResourceCompile Include="src\resource.rc">
+      <Filter>Resource Files</Filter>
     </ResourceCompile>
   </ItemGroup>
 </Project>
