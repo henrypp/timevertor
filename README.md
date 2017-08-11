@@ -1,6 +1,6 @@
 ## TimeVertor
 
-![TimeVertor](http://www.henrypp.org/images/timevertor.png?cachefix)
+![TimeVertor](http://www.henrypp.org/images/timevertor.png)
 
 It's tiny and completely free application for datetime conversion to human-readable, RFC 822, ISO 8601, UNIX Timestamp, Mac Timestamp, Microsoft Timestamp and FILETIME.
 
