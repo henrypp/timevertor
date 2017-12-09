@@ -1,21 +1,18 @@
-$RECYCLE.BIN/
-debug/
-release/
+.vs/
+.vscode/
+temp/
+bin/
 x64/
-Temp/
-bin/32
-bin/64
 
-Thumbs.db
+thumbs.db
 ehthumbs.db
-Desktop.ini
+desktop.ini
 
 *.cab
 *.msi
 *.msm
 *.msp
 *.lnk
-
 *.jpg
 *.zip
 *.log
@@ -29,5 +26,9 @@ Desktop.ini
 *.exp
 *.user
 *.iobj
+*.ipch
 *.ipdb
 *.ilk
+*.obj
+*.res
+*.tlog
