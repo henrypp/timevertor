@@ -3,6 +3,7 @@
 temp/
 bin/
 x64/
+win32/
 
 thumbs.db
 ehthumbs.db

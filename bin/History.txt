@@ -1,4 +1,8 @@
 v1.3 (x January 2018)
++ added hotkeys
++ added timezone config
+- fixed displaying dates below unix-time
+- fixed displaying iso 8601 date
 - updated to the latest sdk
 - fixed bugs
 
