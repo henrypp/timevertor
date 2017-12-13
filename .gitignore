@@ -1,7 +1,8 @@
 .vs/
 .vscode/
 temp/
-bin/
+bin/32/
+bin/64/
 x64/
 win32/
 
