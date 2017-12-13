@@ -34,8 +34,8 @@ rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 
 LONG _app_timegetdefaultbias ()
 {
-	DYNAMIC_TIME_ZONE_INFORMATION tz = {0};
-	GetDynamicTimeZoneInformation (&tz);
+	TIME_ZONE_INFORMATION tz = {0};
+	GetTimeZoneInformation (&tz);
 
 	return tz.Bias;
 }
@@ -409,7 +409,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"CheckUpdates", new_val);
 
 					break;
