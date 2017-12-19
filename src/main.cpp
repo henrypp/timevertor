@@ -90,22 +90,22 @@ rstring _app_timedescription (EnumDateType type, bool is_desc)
 	rstring result;
 
 	if (type == TypeRfc2822)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_RFC2822, 0) : I18N (&app, IDS_FMTNAME_RFC2822, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822);
 
 	else if (type == TypeIso8601)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_ISO8601, 0) : I18N (&app, IDS_FMTNAME_ISO8601, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_ISO8601 : IDS_FMTNAME_ISO8601);
 
 	else if (type == TypeUnixtime)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_UNIXTIME, 0) : I18N (&app, IDS_FMTNAME_UNIXTIME, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_UNIXTIME : IDS_FMTNAME_UNIXTIME);
 
 	else if (type == TypeMactime)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_MACTIME, 0) : I18N (&app, IDS_FMTNAME_MACTIME, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_MACTIME : IDS_FMTNAME_MACTIME);
 
 	else if (type == TypeMicrosofttime)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_MICROSOFTTIME, 0) : I18N (&app, IDS_FMTNAME_MICROSOFTTIME, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_MICROSOFTTIME : IDS_FMTNAME_MICROSOFTTIME);
 
 	else if (type == TypeFiletime)
-		result = is_desc ? I18N (&app, IDS_FMTDESC_FILETIME, 0) : I18N (&app, IDS_FMTNAME_FILETIME, 0);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_FILETIME : IDS_FMTNAME_FILETIME);
 
 	return result;
 }
@@ -187,17 +187,17 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 			// configure menu
 			const HMENU menu = GetMenu (hwnd);
 
-			app.LocaleMenu (menu, I18N (&app, IDS_FILE, 0), 0, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_EXIT, 0), IDM_EXIT, false, L"\tEsc");
-			app.LocaleMenu (menu, I18N (&app, IDS_SETTINGS, 0), 1, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_ALWAYSONTOP_CHK, 0), IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_CHECKUPDATES_CHK, 0), IDM_CHECKUPDATES_CHK, false, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), I18N (&app, IDS_TIMEZONE, 0), TIMEZONE_MENU, true, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), I18N (&app, IDS_LANGUAGE, 0), LANG_MENU, true, L" (Language)");
-			app.LocaleMenu (menu, I18N (&app, IDS_HELP, 0), 2, true, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_WEBSITE, 0), IDM_WEBSITE, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_CHECKUPDATES, 0), IDM_CHECKUPDATES, false, nullptr);
-			app.LocaleMenu (menu, I18N (&app, IDS_ABOUT, 0), IDM_ABOUT, false, L"\tF1");
+			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
+			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
+			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
+			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+			app.LocaleMenu (GetSubMenu (menu, 1), IDS_TIMEZONE, TIMEZONE_MENU, true, nullptr);
+			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
+			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
+			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
+			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
+			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
 
 			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDM_LANGUAGE); // enum localizations
 
@@ -291,7 +291,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				const HMENU submenu = GetSubMenu (menu, 0);
 
 				// localize
-				app.LocaleMenu (submenu, I18N (&app, IDS_COPY, 0), IDM_COPY, false, L"\tCtrl+C");
+				app.LocaleMenu (submenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
 
 				if (!SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETSELECTEDCOUNT, 0, 0))
 					EnableMenuItem (submenu, IDM_COPY, MF_BYCOMMAND | MF_DISABLED);
@@ -349,7 +349,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						const UINT ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
 						if (ctrl_id == IDC_CURRENT)
-							StringCchCopy (buffer, _countof (buffer), I18N (&app, IDS_CURRENT, 0));
+							StringCchCopy (buffer, _countof (buffer), app.LocaleString (IDS_CURRENT));
 
 						if (buffer[0])
 							lpnmdi->lpszText = buffer;
@@ -429,7 +429,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_ABOUT:
 				{
-					app.CreateAboutWindow (hwnd, I18N (&app, IDS_DONATE, 0));
+					app.CreateAboutWindow (hwnd, app.LocaleString (IDS_DONATE));
 					break;
 				}
 
