@@ -90,22 +90,22 @@ rstring _app_timedescription (EnumDateType type, bool is_desc)
 	rstring result;
 
 	if (type == TypeRfc2822)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822, nullptr);
 
 	else if (type == TypeIso8601)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_ISO8601 : IDS_FMTNAME_ISO8601);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_ISO8601 : IDS_FMTNAME_ISO8601, nullptr);
 
 	else if (type == TypeUnixtime)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_UNIXTIME : IDS_FMTNAME_UNIXTIME);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_UNIXTIME : IDS_FMTNAME_UNIXTIME, nullptr);
 
 	else if (type == TypeMactime)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_MACTIME : IDS_FMTNAME_MACTIME);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_MACTIME : IDS_FMTNAME_MACTIME, nullptr);
 
 	else if (type == TypeMicrosofttime)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_MICROSOFTTIME : IDS_FMTNAME_MICROSOFTTIME);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_MICROSOFTTIME : IDS_FMTNAME_MICROSOFTTIME, nullptr);
 
 	else if (type == TypeFiletime)
-		result = app.LocaleString (is_desc ? IDS_FMTDESC_FILETIME : IDS_FMTNAME_FILETIME);
+		result = app.LocaleString (is_desc ? IDS_FMTDESC_FILETIME : IDS_FMTNAME_FILETIME, nullptr);
 
 	return result;
 }
@@ -170,12 +170,12 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 					mii.fType = MFT_STRING;
 					mii.fState = MFS_DEFAULT;
 					mii.dwTypeData = name;
-					mii.wID = IDM_TIMEZONE + UINT (i);
+					mii.wID = IDX_TIMEZONE + UINT (i);
 
-					InsertMenuItem (submenu_timezone, IDM_TIMEZONE + UINT (i), FALSE, &mii);
+					InsertMenuItem (submenu_timezone, IDX_TIMEZONE + UINT (i), FALSE, &mii);
 
 					if (int_timezones[i] == current_bias)
-						CheckMenuRadioItem (submenu_timezone, IDM_TIMEZONE, IDM_TIMEZONE + UINT (_countof (int_timezones)), IDM_TIMEZONE + UINT (i), MF_BYCOMMAND);
+						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), IDX_TIMEZONE + UINT (i), MF_BYCOMMAND);
 				}
 			}
 
@@ -199,7 +199,7 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
 			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
 
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDM_LANGUAGE); // enum localizations
+			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
 
 			// configure listview
 			for (UINT i = 0; i < TypeMax; i++)
@@ -349,7 +349,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						const UINT ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
 						if (ctrl_id == IDC_CURRENT)
-							StringCchCopy (buffer, _countof (buffer), app.LocaleString (IDS_CURRENT));
+							StringCchCopy (buffer, _countof (buffer), app.LocaleString (IDS_CURRENT, nullptr));
 
 						if (buffer[0])
 							lpnmdi->lpszText = buffer;
@@ -364,20 +364,20 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 		case WM_COMMAND:
 		{
-			if (HIWORD (wparam) == 0 && LOWORD (wparam) >= IDM_LANGUAGE && LOWORD (wparam) <= IDM_LANGUAGE + app.LocaleGetCount ())
+			if (HIWORD (wparam) == 0 && LOWORD (wparam) >= IDX_LANGUAGE && LOWORD (wparam) <= IDX_LANGUAGE + app.LocaleGetCount ())
 			{
-				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), LOWORD (wparam), IDM_LANGUAGE);
+				app.LocaleApplyFromMenu (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), LOWORD (wparam), IDX_LANGUAGE);
 
 				return FALSE;
 			}
-			else if ((LOWORD (wparam) >= IDM_TIMEZONE && LOWORD (wparam) <= IDM_TIMEZONE + _countof (int_timezones)))
+			else if ((LOWORD (wparam) >= IDX_TIMEZONE && LOWORD (wparam) <= IDX_TIMEZONE + _countof (int_timezones)))
 			{
-				const UINT idx = LOWORD (wparam) - IDM_TIMEZONE;
+				const UINT idx = LOWORD (wparam) - IDX_TIMEZONE;
 
 				app.ConfigSet (L"TimezoneBias", (LONGLONG)int_timezones[idx]);
 
 				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
-				CheckMenuRadioItem (submenu_timezone, IDM_TIMEZONE, IDM_TIMEZONE + UINT (_countof (int_timezones)), LOWORD (wparam), MF_BYCOMMAND);
+				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), LOWORD (wparam), MF_BYCOMMAND);
 
 				_app_print (hwnd);
 
@@ -429,7 +429,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_ABOUT:
 				{
-					app.CreateAboutWindow (hwnd, app.LocaleString (IDS_DONATE));
+					app.CreateAboutWindow (hwnd, app.LocaleString (IDS_DONATE, nullptr));
 					break;
 				}
 
