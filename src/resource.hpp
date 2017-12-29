@@ -9,30 +9,30 @@
 #define IDA_MAIN 1
 
 // Menu Id
-#define IDM_MAIN 1000
-#define IDM_LISTVIEW 1001
+#define IDM_MAIN 100
+#define IDM_LISTVIEW 101
 
 // Dialogs
 #define IDD_MAIN 100
 
 // Main Dlg
-#define IDC_INPUT 100
-#define IDC_CURRENT 101
-#define IDC_LISTVIEW 102
+#define IDC_INPUT 102
+#define IDC_CURRENT 103
+#define IDC_LISTVIEW 104
 
 // Main Menu
-#define IDM_EXIT 1002
-#define IDM_ALWAYSONTOP_CHK 1003
-#define IDM_CHECKUPDATES_CHK 1004
-#define IDM_WEBSITE 1005
-#define IDM_DONATE 1006
-#define IDM_CHECKUPDATES 1007
-#define IDM_ABOUT 1008
-#define IDM_COPY 1009
-#define IDM_SELECT_ALL 1010
+#define IDM_EXIT 105
+#define IDM_ALWAYSONTOP_CHK 106
+#define IDM_CHECKUPDATES_CHK 107
+#define IDM_WEBSITE 108
+#define IDM_DONATE 109
+#define IDM_CHECKUPDATES 110
+#define IDM_ABOUT 111
+#define IDM_COPY 112
+#define IDM_SELECT_ALL 113
 
-#define IDX_TIMEZONE 2000
-#define IDX_LANGUAGE 3000
+#define IDX_TIMEZONE 1000
+#define IDX_LANGUAGE 2000
 
 // Strings
 #define IDS_UPDATE_NO 1
