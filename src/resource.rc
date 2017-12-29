@@ -91,7 +91,7 @@ STRINGTABLE
 	IDS_LANGUAGE "Language"
 	IDS_HELP "Help"
 	IDS_WEBSITE "Website"
-	IDS_DONATE "Donate!"
+	IDS_DONATE "Give thanks!"
 	IDS_CHECKUPDATES "Check for updates"
 	IDS_ABOUT "About"
 
