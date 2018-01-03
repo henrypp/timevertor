@@ -1,4 +1,4 @@
-v1.3 (x January 2018)
+v1.3 (3x January 2018)
 + added hotkeys
 + added timezone config
 - fixed displaying dates below unix-time
