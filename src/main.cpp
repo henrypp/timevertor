@@ -2,7 +2,6 @@
 // Copyright (c) 2012-2018 Henry++
 
 #include <windows.h>
-#include <algorithm>
 
 #include "main.hpp"
 #include "rapp.hpp"
@@ -48,24 +47,17 @@ LONG _app_getcurrentbias ()
 	return app.ConfigGet (L"TimezoneBias", _app_getdefaultbias ()).AsLong ();
 }
 
-void _app_gettime (time_t ut, LONG bias, LPSYSTEMTIME lpst)
+void _app_gettime (time_t unixtime, LONG bias, LPSYSTEMTIME lpst)
 {
 	SYSTEMTIME st = {0};
-	_r_unixtime_to_systemtime (ut, &st);
+	_r_unixtime_to_systemtime (unixtime, &st);
 
-	current_timestamp_utc = ut; // store position of current time (utc)
+	current_timestamp_utc = unixtime; // store position of current time (utc)
 
-	if (bias != 0)
-	{
-		TIME_ZONE_INFORMATION tz = {0};
-		tz.Bias = bias; // set timezone shift
+	TIME_ZONE_INFORMATION tz = {0};
+	tz.Bias = bias; // set timezone shift
 
-		SystemTimeToTzSpecificLocalTime (&tz, &st, lpst);
-	}
-	else
-	{
-		CopyMemory (lpst, &st, sizeof (SYSTEMTIME));
-	}
+	SystemTimeToTzSpecificLocalTime (&tz, &st, lpst);
 }
 
 rstring _app_timeconvert (time_t ut, LONG bias, LPSYSTEMTIME lpst, PULARGE_INTEGER pul, EnumDateType type)
@@ -118,24 +110,23 @@ rstring _app_gettimedescription (EnumDateType type, bool is_desc)
 	return result;
 }
 
-void _app_print (HWND hwnd)
+void _app_printdate (HWND hwnd, LPSYSTEMTIME lpst)
 {
-	SYSTEMTIME st = {0};
-	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)lpst);
 
-	const time_t ut = _r_unixtime_from_systemtime (&st);
-
-	FILETIME ft = {0};
-	SystemTimeToFileTime (&st, &ft);
-
-	ULARGE_INTEGER ul = {0};
-	ul.LowPart = ft.dwLowDateTime;
-	ul.HighPart = ft.dwHighDateTime;
-
+	const time_t unixtime = _r_unixtime_from_systemtime (lpst);
 	const LONG bias = _app_getcurrentbias ();
 
+	FILETIME filetime = {0};
+	SystemTimeToFileTime (lpst, &filetime);
+
+	ULARGE_INTEGER ul = {0};
+	ul.LowPart = filetime.dwLowDateTime;
+	ul.HighPart = filetime.dwHighDateTime;
+
+
 	for (UINT i = 0; i < TypeMax; i++)
-		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (ut, bias, &st, &ul, (EnumDateType)i));
+		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (unixtime, bias, lpst, &ul, (EnumDateType)i));
 }
 
 INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
@@ -173,11 +164,11 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// print latest timestamp
 			{
 				SYSTEMTIME st = {0};
-				const time_t ut = app.ConfigGet (L"LatestTimestamp", _r_unixtime_now ()).AsLonglong ();
 
-				_app_gettime (ut, 0, &st);
+				current_timestamp_utc = app.ConfigGet (L"LatestTimestamp", _r_unixtime_now ()).AsLonglong ();
 
-				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
+				//_app_gettime (current_timestamp_utc, 0, &st);
+				//_app_printdate (hwnd, &st);
 			}
 
 			_r_ctrl_settip (hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
@@ -190,7 +181,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// save latest timestamp
 			{
 				SYSTEMTIME st = {0};
-				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+				//SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+
+				_app_gettime (current_timestamp_utc, 0, &st);
 
 				app.ConfigSet (L"LatestTimestamp", _r_unixtime_from_systemtime (&st));
 			}
@@ -233,8 +226,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					WCHAR utc_name[32] = {0};
 					WCHAR menu_title[32] = {0};
 
-					StringCchCopy (utc_name, _countof (utc_name), _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
-					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", utc_name);
+					StringCchPrintf (utc_name, _countof (utc_name), L"GMT %s", _app_timezone2string (bias, true, L"+00:00").GetString ());
+					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
 
 					if (bias == default_bias)
 						StringCchCat (menu_title, _countof (menu_title), SYSTEM_BIAS);
@@ -246,18 +239,21 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					mii.dwTypeData = menu_title;
 					mii.wID = IDX_TIMEZONE + UINT (i);
 
-					InsertMenuItem (submenu_timezone, IDX_TIMEZONE + UINT (i), FALSE, &mii);
+					InsertMenuItem (submenu_timezone, mii.wID, FALSE, &mii);
 
 					if (bias == current_bias)
 					{
 						current_bias_idx = i;
 
-						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), IDX_TIMEZONE + UINT (i), MF_BYCOMMAND);
+						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), mii.wID, MF_BYCOMMAND);
 						SetWindowText (hwnd, _r_fmt (APP_NAME L" [%s]", utc_name));
 					}
 				}
 
-				_app_print (hwnd);
+				SYSTEMTIME st = {0};
+
+				_app_gettime (current_timestamp_utc, current_bias, &st);
+				_app_printdate (hwnd, &st);
 			}
 
 			break;
@@ -338,14 +334,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				case DTN_DATETIMECHANGE:
-				case DTN_CLOSEUP:
 				{
-					SYSTEMTIME st = {0};
-					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+					LPNMDATETIMECHANGE lpnmdtc = (LPNMDATETIMECHANGE)lparam;
 
-					current_timestamp_utc = _r_unixtime_from_systemtime (&st); // store position of current time (utc)
+					current_timestamp_utc = _r_unixtime_from_systemtime (&lpnmdtc->st); // store position of current time (utc)
 
-					_app_print (hwnd);
+					_app_printdate (hwnd, &lpnmdtc->st);
 
 					break;
 				}
@@ -390,7 +384,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				return FALSE;
 			}
-			else if ((LOWORD (wparam) >= IDX_TIMEZONE && LOWORD (wparam) <= IDX_TIMEZONE + _countof (int_timezones) - 1))
+			else if ((LOWORD (wparam) >= IDX_TIMEZONE && LOWORD (wparam) <= IDX_TIMEZONE + (_countof (int_timezones) - 1)))
 			{
 				const UINT idx = LOWORD (wparam) - IDX_TIMEZONE;
 				const LONG bias = int_timezones[idx];
@@ -400,14 +394,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), LOWORD (wparam), MF_BYCOMMAND);
-				SetWindowText (hwnd, _r_fmt (APP_NAME L" [%s]", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ()));
+				SetWindowText (hwnd, _r_fmt (APP_NAME L" [GMT %s]", _app_timezone2string (bias, true, L"+00:00").GetString ()));
 
 				SYSTEMTIME st = {0};
+
 				_app_gettime (current_timestamp_utc, bias, &st);
-
-				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, 0, (LPARAM)&st);
-
-				_app_print (hwnd);
+				_app_printdate (hwnd, &st);
 
 				return FALSE;
 			}
@@ -495,11 +487,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDC_CURRENT:
 				{
 					SYSTEMTIME st = {0};
+
 					_app_gettime (_r_unixtime_now (), _app_getcurrentbias (), &st);
-
-					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
-
-					_app_print (hwnd);
+					_app_printdate (hwnd, &st);
 
 					break;
 				}
@@ -511,25 +501,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				}
 
 				case IDM_TIMEZONE_NEXT:
-				{
-					if (current_bias_idx == _countof (int_timezones) - 1)
-						current_bias_idx = 0;
-
-					else
-						current_bias_idx += 1;
-
-					SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDX_TIMEZONE + current_bias_idx, 0), 0);
-
-					break;
-				}
-
 				case IDM_TIMEZONE_PREV:
 				{
-					if (!current_bias_idx)
-						current_bias_idx = _countof (int_timezones) - 1;
+					if (LOWORD (wparam) == IDM_TIMEZONE_NEXT)
+						current_bias_idx = ((current_bias_idx == (_countof (int_timezones) - 1)) ? 0 : ++current_bias_idx);
 
 					else
-						current_bias_idx -= 1;
+						current_bias_idx = (!current_bias_idx ? (_countof (int_timezones) - 1) : --current_bias_idx);
 
 					SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDX_TIMEZONE + current_bias_idx, 0), 0);
 
