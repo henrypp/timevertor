@@ -12,9 +12,10 @@
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
+size_t current_bias_idx;
 time_t current_timestamp_utc;
 
-rstring _app_timezone2string (time_t bias, bool divide, LPCWSTR utcname)
+rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 {
 	WCHAR result[32] = {0};
 
@@ -47,22 +48,24 @@ LONG _app_getcurrentbias ()
 	return app.ConfigGet (L"TimezoneBias", _app_getdefaultbias ()).AsLong ();
 }
 
-void _app_gettime (time_t ut, LPSYSTEMTIME lpst)
+void _app_gettime (time_t ut, LONG bias, LPSYSTEMTIME lpst)
 {
 	SYSTEMTIME st = {0};
-
 	_r_unixtime_to_systemtime (ut, &st);
 
 	current_timestamp_utc = ut; // store position of current time (utc)
 
-	TIME_ZONE_INFORMATION tz = {0};
-	tz.Bias = _app_getcurrentbias (); // set timezone shift
+	if (bias != 0)
+	{
+		TIME_ZONE_INFORMATION tz = {0};
+		tz.Bias = bias; // set timezone shift
 
-	if (tz.Bias != 0)
 		SystemTimeToTzSpecificLocalTime (&tz, &st, lpst);
-
+	}
 	else
+	{
 		CopyMemory (lpst, &st, sizeof (SYSTEMTIME));
+	}
 }
 
 rstring _app_timeconvert (time_t ut, LONG bias, LPSYSTEMTIME lpst, PULARGE_INTEGER pul, EnumDateType type)
@@ -76,7 +79,7 @@ rstring _app_timeconvert (time_t ut, LONG bias, LPSYSTEMTIME lpst, PULARGE_INTEG
 		result.Format (L"%04d-%02d-%02dT%02d:%02d:%02d%s", lpst->wYear, lpst->wMonth, lpst->wDay, lpst->wHour, lpst->wMinute, lpst->wSecond, _app_timezone2string (bias, true, L"Z").GetString ());
 
 	else if (type == TypeUnixtime)
-		result.Format (L"%" PRIu64, max (ut, 0));
+		result.Format (L"%" PRId64, max (ut, 0LL));
 
 	else if (type == TypeMactime)
 		result.Format (L"%" PRIu64, max (ut + MAC_TIMESTAMP, 0));
@@ -170,20 +173,14 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// print latest timestamp
 			{
 				SYSTEMTIME st = {0};
-				const time_t ut = app.ConfigGet (L"LatestTimestamp", 0).AsUlonglong ();
+				const time_t ut = app.ConfigGet (L"LatestTimestamp", _r_unixtime_now ()).AsLonglong ();
 
-				if (!ut)
-					_app_gettime (_r_unixtime_now (), &st);
-
-				else
-					_r_unixtime_to_systemtime (ut, &st);
+				_app_gettime (ut, 0, &st);
 
 				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
 			}
 
 			_r_ctrl_settip (hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
-
-			_app_print (hwnd);
 
 			break;
 		}
@@ -229,26 +226,38 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				for (size_t i = 0; i < _countof (int_timezones); i++)
 				{
+					const LONG bias = int_timezones[i];
+
 					MENUITEMINFO mii = {0};
 
-					WCHAR name[32] = {0};
-					StringCchPrintf (name, _countof (name), L"GMT %s", _app_timezone2string (int_timezones[i], true, L"+00:00 (UTC)").GetString ());
+					WCHAR utc_name[32] = {0};
+					WCHAR menu_title[32] = {0};
 
-					if (int_timezones[i] == default_bias)
-						StringCchCat (name, _countof (name), L" (Def.)");
+					StringCchCopy (utc_name, _countof (utc_name), _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
+					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", utc_name);
+
+					if (bias == default_bias)
+						StringCchCat (menu_title, _countof (menu_title), SYSTEM_BIAS);
 
 					mii.cbSize = sizeof (mii);
 					mii.fMask = MIIM_ID | MIIM_STRING;
 					mii.fType = MFT_STRING;
 					mii.fState = MFS_DEFAULT;
-					mii.dwTypeData = name;
+					mii.dwTypeData = menu_title;
 					mii.wID = IDX_TIMEZONE + UINT (i);
 
 					InsertMenuItem (submenu_timezone, IDX_TIMEZONE + UINT (i), FALSE, &mii);
 
-					if (int_timezones[i] == current_bias)
+					if (bias == current_bias)
+					{
+						current_bias_idx = i;
+
 						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), IDX_TIMEZONE + UINT (i), MF_BYCOMMAND);
+						SetWindowText (hwnd, _r_fmt (APP_NAME L" [%s]", utc_name));
+					}
 				}
+
+				_app_print (hwnd);
 			}
 
 			break;
@@ -322,7 +331,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						const rstring datetime = lpds->pszUserString;
 
 						if (datetime.IsNumeric ())
-							_r_unixtime_to_systemtime (datetime.AsUlonglong (), &lpds->st);
+							_r_unixtime_to_systemtime (datetime.AsLonglong (), &lpds->st);
 					}
 
 					break;
@@ -381,17 +390,20 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				return FALSE;
 			}
-			else if ((LOWORD (wparam) >= IDX_TIMEZONE && LOWORD (wparam) <= IDX_TIMEZONE + _countof (int_timezones)))
+			else if ((LOWORD (wparam) >= IDX_TIMEZONE && LOWORD (wparam) <= IDX_TIMEZONE + _countof (int_timezones) - 1))
 			{
 				const UINT idx = LOWORD (wparam) - IDX_TIMEZONE;
+				const LONG bias = int_timezones[idx];
 
-				app.ConfigSet (L"TimezoneBias", int_timezones[idx]);
+				current_bias_idx = idx;
+				app.ConfigSet (L"TimezoneBias", bias);
 
 				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
-				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), LOWORD (wparam), MF_BYCOMMAND);
+				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), LOWORD (wparam), MF_BYCOMMAND);
+				SetWindowText (hwnd, _r_fmt (APP_NAME L" [%s]", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ()));
 
 				SYSTEMTIME st = {0};
-				_app_gettime (current_timestamp_utc, &st);
+				_app_gettime (current_timestamp_utc, bias, &st);
 
 				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, 0, (LPARAM)&st);
 
@@ -483,7 +495,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDC_CURRENT:
 				{
 					SYSTEMTIME st = {0};
-					_app_gettime (_r_unixtime_now (), &st);
+					_app_gettime (_r_unixtime_now (), _app_getcurrentbias (), &st);
 
 					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
 
@@ -495,6 +507,32 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDM_SELECT_ALL:
 				{
 					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
+					break;
+				}
+
+				case IDM_TIMEZONE_NEXT:
+				{
+					if (current_bias_idx == _countof (int_timezones) - 1)
+						current_bias_idx = 0;
+
+					else
+						current_bias_idx += 1;
+
+					SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDX_TIMEZONE + current_bias_idx, 0), 0);
+
+					break;
+				}
+
+				case IDM_TIMEZONE_PREV:
+				{
+					if (!current_bias_idx)
+						current_bias_idx = _countof (int_timezones) - 1;
+
+					else
+						current_bias_idx -= 1;
+
+					SendMessage (hwnd, WM_COMMAND, MAKEWPARAM (IDX_TIMEZONE + current_bias_idx, 0), 0);
+
 					break;
 				}
 			}
