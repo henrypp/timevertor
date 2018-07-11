@@ -223,10 +223,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					MENUITEMINFO mii = {0};
 
-					WCHAR utc_name[32] = {0};
 					WCHAR menu_title[32] = {0};
 
-					StringCchPrintf (utc_name, _countof (utc_name), L"GMT %s", _app_timezone2string (bias, true, L"+00:00").GetString ());
 					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
 
 					if (bias == default_bias)
@@ -246,7 +244,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						current_bias_idx = i;
 
 						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), mii.wID, MF_BYCOMMAND);
-						SetWindowText (hwnd, _r_fmt (APP_NAME L" [%s]", utc_name));
 					}
 				}
 
@@ -394,7 +391,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), LOWORD (wparam), MF_BYCOMMAND);
-				SetWindowText (hwnd, _r_fmt (APP_NAME L" [GMT %s]", _app_timezone2string (bias, true, L"+00:00").GetString ()));
 
 				SYSTEMTIME st = {0};
 

@@ -1,5 +1,5 @@
-v1.3.1 (x July 2018)
-- fixed timezone correction after set new timezone
+v1.3.1 (11 July 2018)
+- fixed timezone correction
 - fixed windows xp support
 - updated project sdk
 - fixed bugs

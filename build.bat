@@ -1,4 +1,4 @@
 @echo off
 
 cd ..\builder
-build "" timevertor 1.3
+build TimeVertor timevertor 1.3
