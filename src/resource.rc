@@ -32,6 +32,7 @@ IDM_MAIN MENU
 	{
 		MENUITEM " ", IDM_ALWAYSONTOP_CHK
 		MENUITEM " ", IDM_CHECKUPDATES_CHK
+		MENUITEM " ", IDM_CLASSICUI_CHK
 		MENUITEM SEPARATOR
 		POPUP " "
 		{
@@ -80,13 +81,19 @@ FONT 8, "Ms Shell Dlg"
 STRINGTABLE
 {
 	IDS_UPDATE_NO "No updates available."
-	IDS_UPDATE_YES "New version (%s) available. Open download page?"
+	IDS_UPDATE_YES "Update available, download and install them?"
+	IDS_UPDATE_DOWNLOAD "Downloading update..."
+	IDS_UPDATE_DONE "Downloading update finished."
+	IDS_UPDATE_ERROR "Update server connection error."
+	IDS_UPDATE_INIT "Checking for new releases..."
+	IDS_UPDATE_INSTALL "Update available, do you want to install them?"
 
 	IDS_FILE "File"
 	IDS_EXIT "Exit"
 	IDS_SETTINGS "Settings"
 	IDS_ALWAYSONTOP_CHK "Always on top"
 	IDS_CHECKUPDATES_CHK "Periodically check for updates (recommended)"
+	IDS_CLASSICUI_CHK "Use classic interface (restart required)"
 	IDS_TIMEZONE "Timezone"
 	IDS_LANGUAGE "Language"
 	IDS_HELP "Help"
@@ -112,6 +119,7 @@ STRINGTABLE
 	IDS_FMTDESC_FILETIME "64-bit value representing the number of 100-nanosecond intervals since January 1, 1601 (UTC)"
 
 	IDS_CURRENT "Insert current time!"
+	IDS_CLOSE "Close"
 }
 
 //

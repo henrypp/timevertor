@@ -12,7 +12,9 @@
 
 rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
 
-rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
+time_t current_timestamp_utc;
+
+rstring _app_timezone2string (time_t bias, bool divide, LPCWSTR utcname)
 {
 	WCHAR result[32] = {0};
 
@@ -24,7 +26,7 @@ rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 	{
 		const WCHAR symbol = ((bias > 0) ? L'-' : L'+');
 		const u_int tzHours = (u_int)floor (long double ((abs (bias)) / 60.0));
-		const u_int tzMinutes = (abs (bias) % 60);
+		const u_int tzMinutes = (abs (bias) % 60L);
 
 		StringCchPrintf (result, _countof (result), L"%c%02u%s%02u", symbol, tzHours, divide ? L":" : L"", tzMinutes);
 	}
@@ -32,7 +34,7 @@ rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 	return result;
 }
 
-LONG _app_timegetdefaultbias ()
+LONG _app_getdefaultbias ()
 {
 	TIME_ZONE_INFORMATION tz = {0};
 	GetTimeZoneInformation (&tz);
@@ -40,29 +42,32 @@ LONG _app_timegetdefaultbias ()
 	return tz.Bias;
 }
 
-LONG _app_timegetcurrentbias ()
+LONG _app_getcurrentbias ()
 {
-	return app.ConfigGet (L"TimezoneBias", _app_timegetdefaultbias ()).AsLong ();
+	return app.ConfigGet (L"TimezoneBias", _app_getdefaultbias ()).AsLong ();
 }
 
-bool _app_timegetcurrent (LPSYSTEMTIME lpst)
+void _app_gettime (time_t ut, LPSYSTEMTIME lpst)
 {
-	TIME_ZONE_INFORMATION tz = {0};
-	tz.Bias = _app_timegetcurrentbias (); // set timezone shift
-
 	SYSTEMTIME st = {0};
-	GetSystemTime (&st);
 
-	SystemTimeToTzSpecificLocalTime (&tz, &st, lpst);
+	_r_unixtime_to_systemtime (ut, &st);
 
-	return true;
+	current_timestamp_utc = ut; // store position of current time (utc)
+
+	TIME_ZONE_INFORMATION tz = {0};
+	tz.Bias = _app_getcurrentbias (); // set timezone shift
+
+	if (tz.Bias != 0)
+		SystemTimeToTzSpecificLocalTime (&tz, &st, lpst);
+
+	else
+		CopyMemory (lpst, &st, sizeof (SYSTEMTIME));
 }
 
-rstring _app_timeconvert (__time64_t ut, LPSYSTEMTIME lpst, PULARGE_INTEGER pul, EnumDateType type)
+rstring _app_timeconvert (time_t ut, LONG bias, LPSYSTEMTIME lpst, PULARGE_INTEGER pul, EnumDateType type)
 {
 	rstring result;
-
-	const LONG bias = _app_timegetcurrentbias ();
 
 	if (type == TypeRfc2822)
 		result.Format (L"%s, %02d %s %04d %02d:%02d:%02d %s", str_dayofweek[lpst->wDayOfWeek], lpst->wDay, str_month[lpst->wMonth - 1], lpst->wYear, lpst->wHour, lpst->wMinute, lpst->wSecond, _app_timezone2string (bias, false, L"GMT").GetString ());
@@ -71,21 +76,21 @@ rstring _app_timeconvert (__time64_t ut, LPSYSTEMTIME lpst, PULARGE_INTEGER pul,
 		result.Format (L"%04d-%02d-%02dT%02d:%02d:%02d%s", lpst->wYear, lpst->wMonth, lpst->wDay, lpst->wHour, lpst->wMinute, lpst->wSecond, _app_timezone2string (bias, true, L"Z").GetString ());
 
 	else if (type == TypeUnixtime)
-		result.Format (L"%llu", max (ut, 0));
+		result.Format (L"%" PRIu64, max (ut, 0));
 
 	else if (type == TypeMactime)
-		result.Format (L"%llu", max (ut + MAC_TIMESTAMP, 0));
+		result.Format (L"%" PRIu64, max (ut + MAC_TIMESTAMP, 0));
 
 	else if (type == TypeMicrosofttime)
 		result.Format (L"%.09f", max ((double (pul->QuadPart) / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP, 0.0));
 
 	else if (type == TypeFiletime)
-		result.Format (L"%llu", max (pul->QuadPart, 0));
+		result.Format (L"%" PRIu64, max (pul->QuadPart, 0));
 
 	return result;
 }
 
-rstring _app_timedescription (EnumDateType type, bool is_desc)
+rstring _app_gettimedescription (EnumDateType type, bool is_desc)
 {
 	rstring result;
 
@@ -115,7 +120,7 @@ void _app_print (HWND hwnd)
 	SYSTEMTIME st = {0};
 	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
 
-	const __time64_t ut = _r_unixtime_from_systemtime (&st);
+	const time_t ut = _r_unixtime_from_systemtime (&st);
 
 	FILETIME ft = {0};
 	SystemTimeToFileTime (&st, &ft);
@@ -124,19 +129,86 @@ void _app_print (HWND hwnd)
 	ul.LowPart = ft.dwLowDateTime;
 	ul.HighPart = ft.dwHighDateTime;
 
+	const LONG bias = _app_getcurrentbias ();
+
 	for (UINT i = 0; i < TypeMax; i++)
-		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (ut, &st, &ul, (EnumDateType)i));
+		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (ut, bias, &st, &ul, (EnumDateType)i));
 }
 
-BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
+INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 {
 	switch (msg)
 	{
-		case _RM_INITIALIZE:
+		case WM_INITDIALOG:
+		{
+			// configure listview
+			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
+
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, 39, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, nullptr, 61, LVCFMT_RIGHT);
+
+			for (UINT i = 0; i < TypeMax; i++)
+				_r_listview_additem (hwnd, IDC_LISTVIEW, i, 0, nullptr);
+
+			// configure datetime format
+			{
+				WCHAR date_format[MAX_PATH] = {0};
+				WCHAR time_format[MAX_PATH] = {0};
+
+				if (
+					GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_SLONGDATE, date_format, _countof (date_format)) &&
+					GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_STIMEFORMAT, time_format, _countof (time_format))
+					)
+				{
+					WCHAR buffer[MAX_PATH] = {0};
+					StringCchPrintf (buffer, _countof (buffer), L"%s %s", date_format, time_format);
+
+					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)buffer);
+				}
+			}
+
+			// print latest timestamp
+			{
+				SYSTEMTIME st = {0};
+				const time_t ut = app.ConfigGet (L"LatestTimestamp", 0).AsUlonglong ();
+
+				if (!ut)
+					_app_gettime (_r_unixtime_now (), &st);
+
+				else
+					_r_unixtime_to_systemtime (ut, &st);
+
+				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
+			}
+
+			_r_ctrl_settip (hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
+
+			_app_print (hwnd);
+
+			break;
+		}
+
+		case WM_DESTROY:
+		{
+			// save latest timestamp
+			{
+				SYSTEMTIME st = {0};
+				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+
+				app.ConfigSet (L"LatestTimestamp", _r_unixtime_from_systemtime (&st));
+			}
+
+			PostQuitMessage (0);
+
+			break;
+		}
+
+		case RM_INITIALIZE:
 		{
 			// configure menu
 			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+			CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
 			// configure timezone
 			{
@@ -152,8 +224,8 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 					}
 				}
 
-				const LONG def_bias = _app_timegetdefaultbias ();
-				const LONG current_bias = _app_timegetcurrentbias ();
+				const LONG current_bias = _app_getcurrentbias ();
+				const LONG default_bias = _app_getdefaultbias ();
 
 				for (size_t i = 0; i < _countof (int_timezones); i++)
 				{
@@ -162,7 +234,7 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 					WCHAR name[32] = {0};
 					StringCchPrintf (name, _countof (name), L"GMT %s", _app_timezone2string (int_timezones[i], true, L"+00:00 (UTC)").GetString ());
 
-					if (int_timezones[i] == def_bias)
+					if (int_timezones[i] == default_bias)
 						StringCchCat (name, _countof (name), L" (Def.)");
 
 					mii.cbSize = sizeof (mii);
@@ -182,7 +254,7 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 			break;
 		}
 
-		case _RM_LOCALIZE:
+		case RM_LOCALIZE:
 		{
 			// configure menu
 			const HMENU menu = GetMenu (hwnd);
@@ -192,6 +264,7 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
 			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
 			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
 			app.LocaleMenu (GetSubMenu (menu, 1), IDS_TIMEZONE, TIMEZONE_MENU, true, nullptr);
 			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
 			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
@@ -203,84 +276,13 @@ BOOL initializer_callback (HWND hwnd, DWORD msg, LPVOID, LPVOID)
 
 			// configure listview
 			for (UINT i = 0; i < TypeMax; i++)
-				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_timedescription ((EnumDateType)i, false));
+				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription ((EnumDateType)i, false));
 
 			_r_wnd_addstyle (hwnd, IDC_CURRENT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
 
 			RedrawWindow (hwnd, nullptr, nullptr, RDW_ERASENOW | RDW_INVALIDATE);
 
 			break;
-		}
-	}
-
-	return FALSE;
-}
-
-INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
-{
-	switch (msg)
-	{
-		case WM_INITDIALOG:
-		{
-			// configure listview
-			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
-
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, 39, LVCFMT_LEFT);
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, nullptr, 61, LVCFMT_RIGHT);
-
-			for (UINT i = 0; i < TypeMax; i++)
-				_r_listview_additem (hwnd, IDC_LISTVIEW, i, 0, nullptr);
-
-			// configure controls
-			rstring dt_format;
-			WCHAR buffer[MAX_PATH] = {0};
-
-			GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_SSHORTDATE, buffer, _countof (buffer));
-			dt_format.Append (buffer);
-			dt_format.Append (L", ");
-
-			GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_STIMEFORMAT, buffer, _countof (buffer));
-			dt_format.Append (buffer);
-
-			SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)dt_format.GetBuffer ());
-			dt_format.Clear ();
-
-			// print latest timestamp
-			{
-				SYSTEMTIME st = {0};
-				__time64_t ut = app.ConfigGet (L"LatestTimestamp", 0).AsLonglong ();
-
-				if (!ut)
-					ut = _r_unixtime_now ();
-
-				_r_unixtime_to_systemtime (ut, &st);
-
-				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
-			}
-
-			_r_ctrl_settip (hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
-
-			_app_print (hwnd);
-
-			break;
-		}
-
-		case WM_DESTROY:
-		{
-			SYSTEMTIME st = {0};
-			SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
-
-			app.ConfigSet (L"LatestTimestamp", _r_unixtime_from_systemtime (&st));
-
-			PostQuitMessage (0);
-
-			break;
-		}
-
-		case WM_QUERYENDSESSION:
-		{
-			SetWindowLongPtr (hwnd, DWLP_MSGRESULT, TRUE);
-			return TRUE;
 		}
 
 		case WM_CONTEXTMENU:
@@ -315,10 +317,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					LPNMDATETIMESTRING lpds = (LPNMDATETIMESTRING)lparam;
 
-					const rstring datetime = lpds->pszUserString;
+					if (lpds)
+					{
+						const rstring datetime = lpds->pszUserString;
 
-					if (datetime.IsNumeric ())
-						_r_unixtime_to_systemtime (datetime.AsLonglong (), &lpds->st);
+						if (datetime.IsNumeric ())
+							_r_unixtime_to_systemtime (datetime.AsUlonglong (), &lpds->st);
+					}
 
 					break;
 				}
@@ -326,7 +331,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case DTN_DATETIMECHANGE:
 				case DTN_CLOSEUP:
 				{
+					SYSTEMTIME st = {0};
+					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, 0, (LPARAM)&st);
+
+					current_timestamp_utc = _r_unixtime_from_systemtime (&st); // store position of current time (utc)
+
 					_app_print (hwnd);
+
 					break;
 				}
 
@@ -334,7 +345,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					LPNMLVGETINFOTIP lpnmlv = (LPNMLVGETINFOTIP)lparam;
 
-					StringCchCopy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_timedescription ((EnumDateType)lpnmlv->iItem, true));
+					StringCchCopy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription ((EnumDateType)lpnmlv->iItem, true));
 
 					break;
 				}
@@ -374,10 +385,15 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			{
 				const UINT idx = LOWORD (wparam) - IDX_TIMEZONE;
 
-				app.ConfigSet (L"TimezoneBias", (LONGLONG)int_timezones[idx]);
+				app.ConfigSet (L"TimezoneBias", int_timezones[idx]);
 
 				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 				CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones)), LOWORD (wparam), MF_BYCOMMAND);
+
+				SYSTEMTIME st = {0};
+				_app_gettime (current_timestamp_utc, &st);
+
+				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, 0, (LPARAM)&st);
 
 				_app_print (hwnd);
 
@@ -397,7 +413,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					const bool new_val = !app.ConfigGet (L"AlwaysOnTop", false).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
@@ -409,8 +425,18 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
 
-					CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"CheckUpdates", new_val);
+
+					break;
+				}
+
+				case IDM_CLASSICUI_CHK:
+				{
+					const bool new_val = !app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool ();
+
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					app.ConfigSet (L"ClassicUI", new_val);
 
 					break;
 				}
@@ -423,13 +449,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_CHECKUPDATES:
 				{
-					app.CheckForUpdates (false);
+					app.UpdateCheck (true);
 					break;
 				}
 
 				case IDM_ABOUT:
 				{
-					app.CreateAboutWindow (hwnd, app.LocaleString (IDS_DONATE, nullptr));
+					app.CreateAboutWindow (hwnd);
 					break;
 				}
 
@@ -439,10 +465,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					size_t item = LAST_VALUE;
 
-					while ((item = (size_t)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, item, LVNI_SELECTED)) != -1)
+					while ((item = (size_t)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, item, LVNI_SELECTED)) != LAST_VALUE)
 					{
-						buffer.Append (_r_listview_getitemtext (hwnd, IDC_LISTVIEW, item, 1));
-						buffer.Append (L"\r\n");
+						buffer.AppendFormat (L"%s\r\n", _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item, 1).GetString ());
 					}
 
 					if (!buffer.IsEmpty ())
@@ -458,7 +483,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				case IDC_CURRENT:
 				{
 					SYSTEMTIME st = {0};
-					_app_timegetcurrent (&st);
+					_app_gettime (_r_unixtime_now (), &st);
 
 					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)&st);
 
@@ -483,24 +508,25 @@ INT APIENTRY wWinMain (HINSTANCE, HINSTANCE, LPWSTR, INT)
 {
 	MSG msg = {0};
 
-	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc, &initializer_callback))
+	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc))
 	{
 		const HACCEL haccel = LoadAccelerators (app.GetHINSTANCE (), MAKEINTRESOURCE (IDA_MAIN));
 
-		while (GetMessage (&msg, nullptr, 0, 0) > 0)
+		if (haccel)
 		{
-			if (haccel)
+			while (GetMessage (&msg, nullptr, 0, 0) > 0)
+			{
 				TranslateAccelerator (app.GetHWND (), haccel, &msg);
 
-			if (!IsDialogMessage (app.GetHWND (), &msg))
-			{
-				TranslateMessage (&msg);
-				DispatchMessage (&msg);
+				if (!IsDialogMessage (app.GetHWND (), &msg))
+				{
+					TranslateMessage (&msg);
+					DispatchMessage (&msg);
+				}
 			}
-		}
 
-		if (haccel)
 			DestroyAcceleratorTable (haccel);
+		}
 	}
 
 	return (INT)msg.wParam;

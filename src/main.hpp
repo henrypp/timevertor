@@ -9,8 +9,8 @@
 #include "resource.hpp"
 #include "app.hpp"
 
-#define TIMEZONE_MENU 3
-#define LANG_MENU 4
+#define TIMEZONE_MENU 4
+#define LANG_MENU 5
 
 #define MAC_TIMESTAMP 2082844800LL
 #define MICROSOFT_TIMESTAMP 109206.000000
@@ -26,7 +26,7 @@ enum EnumDateType
 	TypeMax = 6,
 };
 
-const LONG int_timezones[] = {
+const time_t int_timezones[] = {
 	-840, // +14:00
 	-780, // +13:00
 	-765, // +12:45
