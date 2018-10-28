@@ -224,7 +224,6 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					MENUITEMINFO mii = {0};
 
 					WCHAR menu_title[32] = {0};
-
 					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
 
 					if (bias == default_bias)
