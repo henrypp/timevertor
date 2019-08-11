@@ -1,5 +1,5 @@
 // TimeVertor
-// Copyright (c) 2012-2018 Henry++
+// Copyright (c) 2012-2019 Henry++
 
 #include <windows.h>
 
@@ -125,7 +125,7 @@ void _app_printdate (HWND hwnd, LPSYSTEMTIME lpst)
 	ul.HighPart = filetime.dwHighDateTime;
 
 
-	for (UINT i = 0; i < TypeMax; i++)
+	for (INT i = 0; i < TypeMax; i++)
 		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (unixtime, bias, lpst, &ul, (EnumDateType)i));
 }
 
@@ -142,10 +142,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			// configure listview
 			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP);
 
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, 39, LVCFMT_LEFT);
-			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, nullptr, 61, LVCFMT_RIGHT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, -39, LVCFMT_LEFT);
+			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, nullptr, -61, LVCFMT_RIGHT);
 
-			for (UINT i = 0; i < TypeMax; i++)
+			for (INT i = 0; i < TypeMax; i++)
 				_r_listview_additem (hwnd, IDC_LISTVIEW, i, 0, nullptr);
 
 			// configure datetime format
@@ -175,7 +175,9 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				//_app_printdate (hwnd, &st);
 			}
 
-			_r_ctrl_settip (hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
+			const HWND htip = _r_ctrl_createtip (hwnd);
+
+			_r_ctrl_settip (htip, hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
 
 			break;
 		}
@@ -280,7 +282,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
 
 			// configure listview
-			for (UINT i = 0; i < TypeMax; i++)
+			for (INT i = 0; i < TypeMax; i++)
 				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription ((EnumDateType)i, false));
 
 			_r_wnd_addstyle (hwnd, IDC_CURRENT, app.IsClassicUI () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
@@ -466,12 +468,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					rstring buffer;
 
-					size_t item = LAST_VALUE;
+					INT item = INVALID_INT;
 
-					while ((item = (size_t)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, item, LVNI_SELECTED)) != LAST_VALUE)
-					{
+					while ((item = (INT)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, (WPARAM)item, LVNI_SELECTED)) != INVALID_INT)
 						buffer.AppendFormat (L"%s\r\n", _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item, 1).GetString ());
-					}
 
 					if (!buffer.IsEmpty ())
 					{
