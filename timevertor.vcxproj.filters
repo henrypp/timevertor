@@ -29,15 +29,10 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ResourceCompile Include="src\resource.rc">
-      <Filter>Resource Files</Filter>
-    </ResourceCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="src\resource.hpp">
+    <ClInclude Include="..\routine\rapp.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\main.hpp">
+    <ClInclude Include="..\routine\rconfig.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\routine\routine.hpp">
@@ -46,14 +41,19 @@
     <ClInclude Include="..\routine\rstring.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\routine\rapp.hpp">
+    <ClInclude Include="src\main.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\routine\rconfig.hpp">
+    <ClInclude Include="src\resource.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\app.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="src\resource.rc">
+      <Filter>Resource Files</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>
