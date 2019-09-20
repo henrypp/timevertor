@@ -20,7 +20,7 @@ rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 
 	if (bias == 0)
 	{
-		StringCchCopy (result, _countof (result), utcname);
+		_r_str_copy (result, _countof (result), utcname);
 	}
 	else
 	{
@@ -28,7 +28,7 @@ rstring _app_timezone2string (LONG bias, bool divide, LPCWSTR utcname)
 		const u_int tzHours = (u_int)floor (long double ((abs (bias)) / 60.0));
 		const u_int tzMinutes = (abs (bias) % 60L);
 
-		StringCchPrintf (result, _countof (result), L"%c%02u%s%02u", symbol, tzHours, divide ? L":" : L"", tzMinutes);
+		_r_str_printf (result, _countof (result), L"%c%02u%s%02u", symbol, tzHours, divide ? L":" : L"", tzMinutes);
 	}
 
 	return result;
@@ -124,7 +124,6 @@ void _app_printdate (HWND hwnd, LPSYSTEMTIME lpst)
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-
 	for (INT i = 0; i < TypeMax; i++)
 		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, _app_timeconvert (unixtime, bias, lpst, &ul, (EnumDateType)i));
 }
@@ -159,7 +158,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					)
 				{
 					WCHAR buffer[MAX_PATH] = {0};
-					StringCchPrintf (buffer, _countof (buffer), L"%s %s", date_format, time_format);
+					_r_str_printf (buffer, _countof (buffer), L"%s %s", date_format, time_format);
 
 					SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)buffer);
 				}
@@ -230,10 +229,10 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					MENUITEMINFO mii = {0};
 
 					WCHAR menu_title[32] = {0};
-					StringCchPrintf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
+					_r_str_printf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
 
 					if (bias == default_bias)
-						StringCchCat (menu_title, _countof (menu_title), SYSTEM_BIAS);
+						_r_str_cat (menu_title, _countof (menu_title), SYSTEM_BIAS);
 
 					mii.cbSize = sizeof (mii);
 					mii.fMask = MIIM_ID | MIIM_STRING;
@@ -296,21 +295,21 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			if (GetDlgCtrlID ((HWND)wparam) == IDC_LISTVIEW)
 			{
-				const HMENU menu = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_LISTVIEW));
-				const HMENU submenu = GetSubMenu (menu, 0);
+				const HMENU hmenu = LoadMenu (nullptr, MAKEINTRESOURCE (IDM_LISTVIEW));
+				const HMENU hsubmenu = GetSubMenu (hmenu, 0);
 
 				// localize
-				app.LocaleMenu (submenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
+				app.LocaleMenu (hsubmenu, IDS_COPY, IDM_COPY, false, L"\tCtrl+C");
 
 				if (!SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETSELECTEDCOUNT, 0, 0))
-					EnableMenuItem (submenu, IDM_COPY, MF_BYCOMMAND | MF_DISABLED);
+					EnableMenuItem (hsubmenu, IDM_COPY, MF_BYCOMMAND | MF_DISABLED);
 
 				POINT pt = {0};
 				GetCursorPos (&pt);
 
-				TrackPopupMenuEx (submenu, TPM_RIGHTBUTTON | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, nullptr);
+				TrackPopupMenuEx (hsubmenu, TPM_RIGHTBUTTON | TPM_LEFTBUTTON, pt.x, pt.y, hwnd, nullptr);
 
-				DestroyMenu (menu);
+				DestroyMenu (hmenu);
 			}
 
 			break;
@@ -328,7 +327,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					{
 						const rstring datetime = lpds->pszUserString;
 
-						if (datetime.IsNumeric ())
+						if (_r_str_isnumeric (datetime, datetime.GetLength ()))
 							_r_unixtime_to_systemtime (datetime.AsLonglong (), &lpds->st);
 					}
 
@@ -350,7 +349,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					LPNMLVGETINFOTIP lpnmlv = (LPNMLVGETINFOTIP)lparam;
 
-					StringCchCopy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription ((EnumDateType)lpnmlv->iItem, true));
+					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription ((EnumDateType)lpnmlv->iItem, true));
 
 					break;
 				}
@@ -362,12 +361,12 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					if ((lpnmdi->uFlags & TTF_IDISHWND) != 0)
 					{
 						WCHAR buffer[1024] = {0};
-						const UINT ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
+						const INT ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
 						if (ctrl_id == IDC_CURRENT)
-							StringCchCopy (buffer, _countof (buffer), app.LocaleString (IDS_CURRENT, nullptr));
+							_r_str_copy (buffer, _countof (buffer), app.LocaleString (IDS_CURRENT, nullptr));
 
-						if (buffer[0])
+						if (!_r_str_isempty (buffer))
 							lpnmdi->lpszText = buffer;
 					}
 
@@ -475,7 +474,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 					if (!buffer.IsEmpty ())
 					{
-						buffer.Trim (L"\r\n");
+						_r_str_trim (buffer, L"\r\n");
 
 						_r_clipboard_set (hwnd, buffer, buffer.GetLength ());
 					}
@@ -495,7 +494,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_SELECT_ALL:
 				{
-					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
+					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), INVALID_INT, LVIS_SELECTED, LVIS_SELECTED);
 					break;
 				}
 
