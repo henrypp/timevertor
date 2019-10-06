@@ -291,6 +291,13 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			break;
 		}
 
+		case RM_DPICHANGED:
+		{
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, -39);
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, -61);
+			break;
+		}
+
 		case WM_CONTEXTMENU:
 		{
 			if (GetDlgCtrlID ((HWND)wparam) == IDC_LISTVIEW)
@@ -327,7 +334,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					{
 						const rstring datetime = lpds->pszUserString;
 
-						if (_r_str_isnumeric (datetime, datetime.GetLength ()))
+						if (_r_str_isnumeric (datetime))
 							_r_unixtime_to_systemtime (datetime.AsLonglong (), &lpds->st);
 					}
 
