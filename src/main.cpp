@@ -9,7 +9,7 @@
 
 #include "resource.hpp"
 
-rapp app (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT);
+rapp app;
 
 size_t current_bias_idx;
 time_t current_timestamp_utc;
@@ -535,24 +535,27 @@ INT APIENTRY wWinMain (HINSTANCE, HINSTANCE, LPWSTR, INT)
 {
 	MSG msg = {0};
 
-	if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc))
+	if (app.Initialize (APP_NAME, APP_NAME_SHORT, APP_VERSION, APP_COPYRIGHT))
 	{
-		const HACCEL haccel = LoadAccelerators (app.GetHINSTANCE (), MAKEINTRESOURCE (IDA_MAIN));
-
-		if (haccel)
+		if (app.CreateMainWindow (IDD_MAIN, IDI_MAIN, &DlgProc))
 		{
-			while (GetMessage (&msg, nullptr, 0, 0) > 0)
+			const HACCEL haccel = LoadAccelerators (app.GetHINSTANCE (), MAKEINTRESOURCE (IDA_MAIN));
+
+			if (haccel)
 			{
-				TranslateAccelerator (app.GetHWND (), haccel, &msg);
-
-				if (!IsDialogMessage (app.GetHWND (), &msg))
+				while (GetMessage (&msg, nullptr, 0, 0) > 0)
 				{
-					TranslateMessage (&msg);
-					DispatchMessage (&msg);
-				}
-			}
+					TranslateAccelerator (app.GetHWND (), haccel, &msg);
 
-			DestroyAcceleratorTable (haccel);
+					if (!IsDialogMessage (app.GetHWND (), &msg))
+					{
+						TranslateMessage (&msg);
+						DispatchMessage (&msg);
+					}
+				}
+
+				DestroyAcceleratorTable (haccel);
+			}
 		}
 	}
 
