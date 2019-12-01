@@ -1,6 +1,6 @@
 ## TimeVertor
 
-![TimeVertor](https://www.henrypp.org/images/timevertor.png?cache)
+![TimeVertor](https://www.henrypp.org/images/timevertor.png?cachefix)
 
 It's tiny and completely free application for datetime conversion to human-readable, RFC 822, ISO 8601, UNIX Timestamp, Mac Timestamp, Microsoft Timestamp and FILETIME.
 
@@ -11,4 +11,4 @@ To activate portable mode, create "timevertor.ini" in application folder, or mov
 Website: [www.henrypp.org](https://www.henrypp.org)<br />
 Support: support@henrypp.org<br />
 <br />
-(c) 2011-2018 Henry++
+(c) 2011-2019 Henry++
