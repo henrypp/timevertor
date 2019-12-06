@@ -71,16 +71,16 @@ rstring _app_timeconvert (time_t ut, LONG bias, LPSYSTEMTIME lpst, PULARGE_INTEG
 		result.Format (L"%04d-%02d-%02dT%02d:%02d:%02d%s", lpst->wYear, lpst->wMonth, lpst->wDay, lpst->wHour, lpst->wMinute, lpst->wSecond, _app_timezone2string (bias, true, L"Z").GetString ());
 
 	else if (type == TypeUnixtime)
-		result.Format (L"%" PRId64, max (ut, 0LL));
+		result.Format (L"%" PRId64, (std::max) (ut, 0LL));
 
 	else if (type == TypeMactime)
-		result.Format (L"%" PRIu64, max (ut + MAC_TIMESTAMP, 0));
+		result.Format (L"%" PRId64, (std::max) (ut + MAC_TIMESTAMP, 0LL));
 
 	else if (type == TypeMicrosofttime)
-		result.Format (L"%.09f", max ((double (pul->QuadPart) / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP, 0.0));
+		result.Format (L"%.09f", (std::max) ((double (pul->QuadPart) / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP, 0.0));
 
 	else if (type == TypeFiletime)
-		result.Format (L"%" PRIu64, max (pul->QuadPart, 0));
+		result.Format (L"%" PRIu64, (std::max) (pul->QuadPart, 0ULL));
 
 	return result;
 }
