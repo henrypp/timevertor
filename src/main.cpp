@@ -176,7 +176,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			const HWND htip = _r_ctrl_createtip (hwnd);
 
-			_r_ctrl_settip (htip, hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
+			if (htip)
+				_r_ctrl_settip (htip, hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
 
 			break;
 		}
@@ -301,6 +302,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		{
 			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, nullptr, -39);
 			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, nullptr, -61);
+
 			break;
 		}
 
