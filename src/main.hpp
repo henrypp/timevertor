@@ -1,11 +1,12 @@
 // TimeVertor
-// Copyright (c) 2012-2019 Henry++
+// Copyright (c) 2012-2020 Henry++
 
-#ifndef __MAIN_H__
-#define __MAIN_H__
+#pragma once
 
 #include <windows.h>
 #include <commctrl.h>
+
+#include "routine.hpp"
 #include "resource.hpp"
 #include "app.hpp"
 
@@ -27,7 +28,7 @@ enum EnumDateType
 	TypeMax = 6,
 };
 
-static const LONG int_timezones[] = {
+const LONG int_timezones[] = {
 	720, // -12:00
 	660, // -11:00
 	600, // -10:00
@@ -69,7 +70,7 @@ static const LONG int_timezones[] = {
 	-840, // +14:00
 };
 
-static LPCWSTR str_dayofweek[] = {
+LPCWSTR str_dayofweek[] = {
 	L"Sun",
 	L"Mon",
 	L"Tue",
@@ -93,5 +94,3 @@ LPCWSTR str_month[] = {
 	L"Nov",
 	L"Dec",
 };
-
-#endif // __MAIN_H__
