@@ -33,8 +33,8 @@ IDM_MAIN MENU
 	POPUP " "
 	{
 		MENUITEM " ", IDM_ALWAYSONTOP_CHK
-		MENUITEM " ", IDM_CHECKUPDATES_CHK
 		MENUITEM " ", IDM_CLASSICUI_CHK
+		MENUITEM " ", IDM_CHECKUPDATES_CHK
 		MENUITEM SEPARATOR
 		POPUP " "
 		{
@@ -95,7 +95,7 @@ STRINGTABLE
 	IDS_SETTINGS "Settings"
 	IDS_ALWAYSONTOP_CHK "Always on top"
 	IDS_CHECKUPDATES_CHK "Periodically check for updates (recommended)"
-	IDS_CLASSICUI_CHK "Use classic interface (restart required)"
+	IDS_CLASSICUI_CHK "Use classic interface"
 	IDS_TIMEZONE "Timezone"
 	IDS_LANGUAGE "Language"
 	IDS_HELP "Help"
