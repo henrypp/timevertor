@@ -208,60 +208,65 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case RM_INITIALIZE:
 		{
 			// configure menu
-			CheckMenuItem (GetMenu (hwnd), IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-			CheckMenuItem (GetMenu (hwnd), IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
-			CheckMenuItem (GetMenu (hwnd), IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+			const HMENU hmenu = GetMenu (hwnd);
 
-			// configure timezone
+			if (hmenu)
 			{
-				const HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
+				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (app.ConfigGet (L"AlwaysOnTop", false).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+				CheckMenuItem (hmenu, IDM_CLASSICUI_CHK, MF_BYCOMMAND | (app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool () ? MF_CHECKED : MF_UNCHECKED));
+				CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (app.ConfigGet (L"CheckUpdates", true).AsBool () ? MF_CHECKED : MF_UNCHECKED));
 
-				// clear menu
-				for (UINT i = 0;; i++)
+				// configure timezone
 				{
-					if (!DeleteMenu (submenu_timezone, TIMEZONE_MENU + i, MF_BYCOMMAND))
+					const HMENU submenu_timezone = GetSubMenu (GetSubMenu (hmenu, 1), TIMEZONE_MENU);
+
+					// clear menu
+					for (UINT i = 0;; i++)
 					{
-						DeleteMenu (submenu_timezone, 0, MF_BYPOSITION); // delete separator
-						break;
+						if (!DeleteMenu (submenu_timezone, TIMEZONE_MENU + i, MF_BYCOMMAND))
+						{
+							DeleteMenu (submenu_timezone, 0, MF_BYPOSITION); // delete separator
+							break;
+						}
 					}
-				}
 
-				const LONG current_bias = _app_getcurrentbias ();
-				const LONG default_bias = _app_getdefaultbias ();
+					const LONG current_bias = _app_getcurrentbias ();
+					const LONG default_bias = _app_getdefaultbias ();
 
-				for (size_t i = 0; i < _countof (int_timezones); i++)
-				{
-					const LONG bias = int_timezones[i];
-
-					MENUITEMINFO mii = {0};
-
-					WCHAR menu_title[32] = {0};
-					_r_str_printf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
-
-					if (bias == default_bias)
-						_r_str_cat (menu_title, _countof (menu_title), SYSTEM_BIAS);
-
-					mii.cbSize = sizeof (mii);
-					mii.fMask = MIIM_ID | MIIM_STRING;
-					mii.fType = MFT_STRING;
-					mii.fState = MFS_DEFAULT;
-					mii.dwTypeData = menu_title;
-					mii.wID = IDX_TIMEZONE + UINT (i);
-
-					InsertMenuItem (submenu_timezone, mii.wID, FALSE, &mii);
-
-					if (bias == current_bias)
+					for (size_t i = 0; i < _countof (int_timezones); i++)
 					{
-						current_bias_idx = i;
+						const LONG bias = int_timezones[i];
 
-						CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), mii.wID, MF_BYCOMMAND);
+						MENUITEMINFO mii = {0};
+
+						WCHAR menu_title[32] = {0};
+						_r_str_printf (menu_title, _countof (menu_title), L"GMT %s", _app_timezone2string (bias, true, L"+00:00 (UTC)").GetString ());
+
+						if (bias == default_bias)
+							_r_str_cat (menu_title, _countof (menu_title), SYSTEM_BIAS);
+
+						mii.cbSize = sizeof (mii);
+						mii.fMask = MIIM_ID | MIIM_STRING;
+						mii.fType = MFT_STRING;
+						mii.fState = MFS_DEFAULT;
+						mii.dwTypeData = menu_title;
+						mii.wID = IDX_TIMEZONE + UINT (i);
+
+						InsertMenuItem (submenu_timezone, mii.wID, FALSE, &mii);
+
+						if (bias == current_bias)
+						{
+							current_bias_idx = i;
+
+							CheckMenuRadioItem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + UINT (_countof (int_timezones) - 1), mii.wID, MF_BYCOMMAND);
+						}
 					}
+
+					SYSTEMTIME st = {0};
+
+					_app_gettime (current_timestamp_utc, current_bias, &st);
+					_app_printdate (hwnd, &st);
 				}
-
-				SYSTEMTIME st = {0};
-
-				_app_gettime (current_timestamp_utc, current_bias, &st);
-				_app_printdate (hwnd, &st);
 			}
 
 			break;
@@ -270,22 +275,25 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 		case RM_LOCALIZE:
 		{
 			// configure menu
-			const HMENU menu = GetMenu (hwnd);
+			const HMENU hmenu = GetMenu (hwnd);
 
-			app.LocaleMenu (menu, IDS_FILE, 0, true, nullptr);
-			app.LocaleMenu (menu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
-			app.LocaleMenu (menu, IDS_SETTINGS, 1, true, nullptr);
-			app.LocaleMenu (menu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
-			app.LocaleMenu (menu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), IDS_TIMEZONE, TIMEZONE_MENU, true, nullptr);
-			app.LocaleMenu (GetSubMenu (menu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
-			app.LocaleMenu (menu, IDS_HELP, 2, true, nullptr);
-			app.LocaleMenu (menu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
-			app.LocaleMenu (menu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
-			app.LocaleMenu (menu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
+			if (hmenu)
+			{
+				app.LocaleMenu (hmenu, IDS_FILE, 0, true, nullptr);
+				app.LocaleMenu (hmenu, IDS_EXIT, IDM_EXIT, false, L"\tEsc");
+				app.LocaleMenu (hmenu, IDS_SETTINGS, 1, true, nullptr);
+				app.LocaleMenu (hmenu, IDS_ALWAYSONTOP_CHK, IDM_ALWAYSONTOP_CHK, false, nullptr);
+				app.LocaleMenu (hmenu, IDS_CLASSICUI_CHK, IDM_CLASSICUI_CHK, false, L"*");
+				app.LocaleMenu (hmenu, IDS_CHECKUPDATES_CHK, IDM_CHECKUPDATES_CHK, false, nullptr);
+				app.LocaleMenu (GetSubMenu (hmenu, 1), IDS_TIMEZONE, TIMEZONE_MENU, true, nullptr);
+				app.LocaleMenu (GetSubMenu (hmenu, 1), IDS_LANGUAGE, LANG_MENU, true, L" (Language)");
+				app.LocaleMenu (hmenu, IDS_HELP, 2, true, nullptr);
+				app.LocaleMenu (hmenu, IDS_WEBSITE, IDM_WEBSITE, false, nullptr);
+				app.LocaleMenu (hmenu, IDS_CHECKUPDATES, IDM_CHECKUPDATES, false, nullptr);
+				app.LocaleMenu (hmenu, IDS_ABOUT, IDM_ABOUT, false, L"\tF1");
 
-			app.LocaleEnum ((HWND)GetSubMenu (menu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
+				app.LocaleEnum ((HWND)GetSubMenu (hmenu, 1), LANG_MENU, true, IDX_LANGUAGE); // enum localizations
+			}
 
 			// configure listview
 			for (INT i = 0; i < TypeMax; i++)
@@ -440,22 +448,24 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 					break;
 				}
 
-				case IDM_CHECKUPDATES_CHK:
-				{
-					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
-
-					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
-					app.ConfigSet (L"CheckUpdates", new_val);
-
-					break;
-				}
-
 				case IDM_CLASSICUI_CHK:
 				{
 					const bool new_val = !app.ConfigGet (L"ClassicUI", _APP_CLASSICUI).AsBool ();
 
 					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					app.ConfigSet (L"ClassicUI", new_val);
+
+					app.Restart (hwnd);
+
+					break;
+				}
+
+				case IDM_CHECKUPDATES_CHK:
+				{
+					const bool new_val = !app.ConfigGet (L"CheckUpdates", true).AsBool ();
+
+					CheckMenuItem (GetMenu (hwnd), LOWORD (wparam), MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					app.ConfigSet (L"CheckUpdates", new_val);
 
 					break;
 				}
