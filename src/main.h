@@ -6,9 +6,9 @@
 #include <windows.h>
 #include <commctrl.h>
 
-#include "routine.hpp"
-#include "resource.hpp"
-#include "app.hpp"
+#include "routine.h"
+#include "resource.h"
+#include "app.h"
 
 #define TIMEZONE_MENU 4
 #define LANG_MENU 5
@@ -17,7 +17,7 @@
 #define MAC_TIMESTAMP 2082844800LL
 #define MICROSOFT_TIMESTAMP 109206.000000
 
-enum EnumDateType
+typedef enum _ENUM_DATE_TYPE
 {
 	TypeRfc2822 = 0,
 	TypeIso8601 = 1,
@@ -26,7 +26,7 @@ enum EnumDateType
 	TypeMicrosofttime = 4,
 	TypeFiletime = 5,
 	TypeMax = 6,
-};
+} ENUM_DATE_TYPE;
 
 const LONG int_timezones[] = {
 	720, // -12:00

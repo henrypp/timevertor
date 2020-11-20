@@ -2,9 +2,9 @@
 #include <commctrl.h>
 #include <richedit.h>
 
-#include "resource.hpp"
-#include "rconfig.hpp"
-#include "app.hpp"
+#include "resource.h"
+#include "rconfig.h"
+#include "app.h"
 
 LANGUAGE LANG_ENGLISH, SUBLANG_DEFAULT
 
@@ -17,8 +17,6 @@ IDA_MAIN ACCELERATORS
 	"C", IDM_COPY, CONTROL, VIRTKEY
 	VK_F1, IDM_ABOUT, VIRTKEY
 	VK_F5, IDC_CURRENT, VIRTKEY
-	VK_F6, IDM_TIMEZONE_PREV, VIRTKEY
-	VK_F7, IDM_TIMEZONE_NEXT, VIRTKEY
 }
 
 //
@@ -38,7 +36,11 @@ IDM_MAIN MENU
 		MENUITEM SEPARATOR
 		POPUP " "
 		{
-			MENUITEM " ", IDX_TIMEZONE
+			MENUITEM "qw ", IDX_TIMEZONE
+			MENUITEM " asd", IDX_TIMEZONE+1
+			MENUITEM "gs ", IDX_TIMEZONE+2
+			MENUITEM "dsg ", IDX_TIMEZONE+3
+			MENUITEM " aa", IDX_TIMEZONE+4
 		}
 		POPUP " "
 		{
