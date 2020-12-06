@@ -1,5 +1,5 @@
 // TimeVertor
-// Copyright (c) 2012-2020 Henry++
+// Copyright (c) 2012-2021 Henry++
 
 #pragma once
 

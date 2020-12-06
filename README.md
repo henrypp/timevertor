@@ -11,4 +11,4 @@ To activate portable mode, create "timevertor.ini" in application folder, or mov
 Website: [www.henrypp.org](https://www.henrypp.org)<br />
 Support: support@henrypp.org<br />
 <br />
-(c) 2011-2019 Henry++
+(c) 2011-2021 Henry++
