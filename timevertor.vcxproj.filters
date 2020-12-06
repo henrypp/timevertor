@@ -15,13 +15,13 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="src\main.cpp">
+    <ClCompile Include="..\routine\rapp.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\routine\rapp.cpp">
+    <ClCompile Include="..\routine\routine.c">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\routine\routine.cpp">
+    <ClCompile Include="src\main.c">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
@@ -38,9 +38,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\app.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\routine\routine.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\routine\ntapi.h">

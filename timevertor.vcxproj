@@ -115,21 +115,18 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <PreprocessorDefinitions>MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
-      <CompileAs>Default</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <SubSystem>Windows</SubSystem>
@@ -148,20 +145,17 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <ControlFlowGuard>Guard</ControlFlowGuard>
       <FunctionLevelLinking>true</FunctionLevelLinking>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <BasicRuntimeChecks>EnableFastChecks</BasicRuntimeChecks>
+      <PreprocessorDefinitions>MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
-      <CompileAs>Default</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <OptimizeReferences>true</OptimizeReferences>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <SubSystem>Windows</SubSystem>
@@ -184,13 +178,12 @@
       <CallingConvention>StdCall</CallingConvention>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;NDEBUG;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_HAVE_UPDATES;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
-      <CompileAs>Default</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
       <EnableEnhancedInstructionSet>StreamingSIMDExtensions</EnableEnhancedInstructionSet>
     </ClCompile>
@@ -199,7 +192,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SetChecksum>true</SetChecksum>
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SubSystem>Windows</SubSystem>
       <MinimumRequiredVersion>5.01</MinimumRequiredVersion>
       <AdditionalOptions>/DEPENDENTLOADFLAG:0xA00 %(AdditionalOptions)</AdditionalOptions>
@@ -217,13 +209,12 @@
       <CallingConvention>StdCall</CallingConvention>
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
-      <PreprocessorDefinitions>_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;NDEBUG;_APP_HAVE_UPDATES;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>MICROSOFT_WINDOWS_WINBASE_H_DEFINE_INTERLOCKED_CPLUSPLUS_OVERLOADS;_UNICODE;UNICODE;WIN32_LEAN_AND_MEAN;APP_HAVE_UPDATES;NDEBUG;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <TreatWarningAsError>true</TreatWarningAsError>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
       <SDLCheck>true</SDLCheck>
       <IntelJCCErratum>true</IntelJCCErratum>
-      <CompileAs>Default</CompileAs>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
@@ -231,7 +222,6 @@
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
       <SetChecksum>true</SetChecksum>
-      <LinkTimeCodeGeneration>UseFastLinkTimeCodeGeneration</LinkTimeCodeGeneration>
       <SubSystem>Windows</SubSystem>
       <AdditionalOptions>/DEPENDENTLOADFLAG:0xA00 %(AdditionalOptions)</AdditionalOptions>
       <MinimumRequiredVersion>5.02</MinimumRequiredVersion>
@@ -242,9 +232,9 @@
     </ResourceCompile>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\routine\rapp.cpp" />
-    <ClCompile Include="..\routine\routine.cpp" />
-    <ClCompile Include="src\main.cpp" />
+    <ClCompile Include="..\routine\rapp.c" />
+    <ClCompile Include="..\routine\routine.c" />
+    <ClCompile Include="src\main.c" />
   </ItemGroup>
   <ItemGroup>
     <ResourceCompile Include="src\resource.rc" />
@@ -254,7 +244,6 @@
     <ClInclude Include="..\routine\rapp.h" />
     <ClInclude Include="..\routine\rconfig.h" />
     <ClInclude Include="..\routine\routine.h" />
-    <ClInclude Include="..\routine\routine.hpp" />
     <ClInclude Include="src\app.h" />
     <ClInclude Include="src\main.h" />
     <ClInclude Include="src\resource.h" />
