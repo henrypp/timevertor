@@ -175,7 +175,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 						if (bias == default_bias)
 							_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
 
-						RtlSecureZeroMemory (&mii, sizeof (mii));
+						memset (&mii, 0, sizeof (mii));
 
 						mii.cbSize = sizeof (mii);
 						mii.fMask = MIIM_ID | MIIM_STRING;
