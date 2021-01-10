@@ -13,7 +13,7 @@
 #define TIMEZONE_MENU 4
 #define LANG_MENU 5
 
-#define SYSTEM_BIAS  L" (def.)"
+#define SYSTEM_BIAS  L" (system)"
 #define MAC_TIMESTAMP 2082844800LL
 #define MICROSOFT_TIMESTAMP 109206.000000
 
