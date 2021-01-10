@@ -75,7 +75,7 @@ VOID _app_timeconvert (LPWSTR buffer, SIZE_T length, LONG64 unixtime, LONG bias,
 	}
 	else if (type == TypeMicrosofttime)
 	{
-		_r_str_printf (buffer, length, L"%.09f", ((double)pul->QuadPart / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP);
+		_r_str_printf (buffer, length, L"%.09f", ((DOUBLE)pul->QuadPart / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP);
 	}
 	else if (type == TypeFiletime)
 	{
@@ -131,9 +131,9 @@ VOID _app_printdate (HWND hwnd, LPSYSTEMTIME lpst)
 
 	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)lpst);
 
-	for (INT i = 0; i < TypeMax; i++)
+	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
-		_app_timeconvert (time_string, RTL_NUMBER_OF (time_string), unixtime, bias, lpst, &ul, (ENUM_DATE_TYPE)i);
+		_app_timeconvert (time_string, RTL_NUMBER_OF (time_string), unixtime, bias, lpst, &ul, i);
 
 		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, time_string);
 	}
@@ -208,8 +208,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			WCHAR time_format[128] = {0};
 
 			if (
-				GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
-				GetLocaleInfo (LOCALE_SYSTEM_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format))
+				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
+				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format))
 				)
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
@@ -263,7 +263,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 			if (hmenu)
 			{
-				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"AlwaysOnTop", FALSE) ? MF_CHECKED : MF_UNCHECKED));
+				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"AlwaysOnTop", APP_ALWAYSONTOP) ? MF_CHECKED : MF_UNCHECKED));
 				CheckMenuItem (hmenu, IDM_CLASSICUI_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"ClassicUI", APP_CLASSICUI) ? MF_CHECKED : MF_UNCHECKED));
 				CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"CheckUpdates", TRUE) ? MF_CHECKED : MF_UNCHECKED));
 			}
@@ -298,8 +298,8 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			}
 
 			// configure listview
-			for (INT i = 0; i < TypeMax; i++)
-				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription ((ENUM_DATE_TYPE)i, FALSE));
+			for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
+				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription (i, FALSE));
 
 			_r_wnd_addstyle (hwnd, IDC_CURRENT, _r_app_isclassicui () ? WS_EX_STATICEDGE : 0, WS_EX_STATICEDGE, GWL_EXSTYLE);
 
@@ -368,7 +368,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 				{
 					LPNMLVGETINFOTIP lpnmlv = (LPNMLVGETINFOTIP)lparam;
 
-					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription ((ENUM_DATE_TYPE)lpnmlv->iItem, TRUE));
+					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription (lpnmlv->iItem, TRUE));
 
 					break;
 				}
@@ -440,7 +440,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 
 				case IDM_ALWAYSONTOP_CHK:
 				{
-					BOOLEAN new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					BOOLEAN new_val = !_r_config_getboolean (L"AlwaysOnTop", APP_ALWAYSONTOP);
 
 					CheckMenuItem (GetMenu (hwnd), ctrl_id, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
