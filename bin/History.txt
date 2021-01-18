@@ -1,3 +1,7 @@
+v1.4 (19 January 2020)
+- fixed filetime 32-bit overflow
+- updated project sdk
+
 v1.3.1 (11 July 2018)
 - fixed timezone correction
 - fixed windows xp support
