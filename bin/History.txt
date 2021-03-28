@@ -1,4 +1,4 @@
-v1.4 (19 January 2020)
+v1.4 (19 January 2021)
 - fixed filetime 32-bit overflow
 - updated project sdk
 
