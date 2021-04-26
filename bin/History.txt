@@ -1,3 +1,10 @@
+v1.4.2 (28 April 2021)
+- updated project sdk
+
+v1.4.1 (28 March 2021)
+- updated project sdk
+- updated localization
+
 v1.4 (19 January 2021)
 - fixed filetime 32-bit overflow
 - updated project sdk
