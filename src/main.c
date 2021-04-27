@@ -201,7 +201,7 @@ INT_PTR CALLBACK DlgProc (HWND hwnd, UINT msg, WPARAM wparam, LPARAM lparam)
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, NULL, -61, LVCFMT_RIGHT);
 
 			for (INT i = 0; i < TypeMax; i++)
-				_r_listview_additem (hwnd, IDC_LISTVIEW, i, 0, NULL);
+				_r_listview_additem (hwnd, IDC_LISTVIEW, i, 0, L"");
 
 			// configure datetime format
 			WCHAR date_format[256] = {0};
