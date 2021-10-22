@@ -10,8 +10,8 @@
 #include "resource.h"
 #include "app.h"
 
-#define TIMEZONE_MENU 4
-#define LANG_MENU 5
+#define TIMEZONE_MENU 3
+#define LANG_MENU 4
 
 #define SYSTEM_BIAS  L" (system)"
 #define MAC_TIMESTAMP 2082844800LL
