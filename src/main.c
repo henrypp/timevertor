@@ -146,17 +146,27 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 	{
 		case WM_INITDIALOG:
 		{
+			WCHAR date_format[128] = {0};
+			WCHAR time_format[128] = {0};
+
+			SYSTEMTIME current_time = {0};
+			SYSTEMTIME system_time = {0};
+
+			HMENU hmenu;
+			HMENU hsubmenu;
+			HWND htip;
+
 			// configure timezone
-			HMENU hmenu = GetMenu (hwnd);
+			hmenu = GetMenu (hwnd);
 
 			if (hmenu)
 			{
-				HMENU submenu_timezone = GetSubMenu (GetSubMenu (hmenu, 1), TIMEZONE_MENU);
+				hsubmenu = GetSubMenu (GetSubMenu (hmenu, 1), TIMEZONE_MENU);
 
-				if (submenu_timezone)
+				if (hsubmenu)
 				{
 					// clear menu
-					_r_menu_clearitems (submenu_timezone);
+					_r_menu_clearitems (hsubmenu);
 
 					MENUITEMINFO mii;
 					WCHAR menu_title[32];
@@ -176,7 +186,7 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 						if (bias == default_bias)
 							_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
 
-						memset (&mii, 0, sizeof (mii));
+						RtlZeroMemory (&mii, sizeof (mii));
 
 						mii.cbSize = sizeof (mii);
 						mii.fMask = MIIM_ID | MIIM_STRING;
@@ -185,12 +195,10 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 						mii.dwTypeData = menu_title;
 						mii.wID = IDX_TIMEZONE + (UINT)i;
 
-						InsertMenuItem (submenu_timezone, mii.wID, FALSE, &mii);
+						InsertMenuItem (hsubmenu, mii.wID, FALSE, &mii);
 
 						if (bias == current_bias)
-						{
-							_r_menu_checkitem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, mii.wID);
-						}
+							_r_menu_checkitem (hsubmenu, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, mii.wID);
 					}
 				}
 			}
@@ -205,9 +213,6 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"");
 
 			// configure datetime format
-			WCHAR date_format[128] = {0};
-			WCHAR time_format[128] = {0};
-
 			if (
 				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
 				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format))
@@ -219,16 +224,13 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 			}
 
 			// print latest timestamp
-			SYSTEMTIME current_time = {0};
-			SYSTEMTIME system_time = {0};
-
 			_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time);
 
 			_app_converttime (&current_time, 0, &system_time);
 			_app_printdate (hwnd, &system_time);
 
 			// set control tip
-			HWND htip = _r_ctrl_createtip (hwnd);
+			htip = _r_ctrl_createtip (hwnd);
 
 			if (htip)
 				_r_ctrl_settiptext (htip, hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
@@ -254,7 +256,9 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 		case RM_INITIALIZE:
 		{
 			// configure menu
-			HMENU hmenu = GetMenu (hwnd);
+			HMENU hmenu;
+
+			hmenu = GetMenu (hwnd);
 
 			if (hmenu)
 			{
@@ -268,11 +272,14 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 		case RM_LOCALIZE:
 		{
 			// configure menu
-			HMENU hmenu = GetMenu (hwnd);
+			HMENU hmenu;
+			HMENU hsubmenu;
+
+			hmenu = GetMenu (hwnd);
 
 			if (hmenu)
 			{
-				HMENU hconfig_menu = GetSubMenu (hmenu, 1);
+				hsubmenu = GetSubMenu (hmenu, 1);
 
 				_r_menu_setitemtext (hmenu, 0, TRUE, _r_locale_getstring (IDS_FILE));
 				_r_menu_setitemtext (hmenu, 1, TRUE, _r_locale_getstring (IDS_SETTINGS));
@@ -286,12 +293,12 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES, FALSE, _r_locale_getstring (IDS_CHECKUPDATES));
 				_r_menu_setitemtextformat (hmenu, IDM_ABOUT, FALSE, L"%s\tF1", _r_locale_getstring (IDS_ABOUT));
 
-				if (hconfig_menu)
+				if (hsubmenu)
 				{
-					_r_menu_setitemtext (hconfig_menu, TIMEZONE_MENU, TRUE, _r_locale_getstring (IDS_TIMEZONE));
-					_r_menu_setitemtextformat (hconfig_menu, LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
+					_r_menu_setitemtext (hsubmenu, TIMEZONE_MENU, TRUE, _r_locale_getstring (IDS_TIMEZONE));
+					_r_menu_setitemtextformat (hsubmenu, LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
 
-					_r_locale_enum (hconfig_menu, LANG_MENU, IDX_LANGUAGE); // enum localizations
+					_r_locale_enum (hsubmenu, LANG_MENU, IDX_LANGUAGE); // enum localizations
 				}
 			}
 
@@ -312,28 +319,31 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 
 		case WM_CONTEXTMENU:
 		{
-			if (GetDlgCtrlID ((HWND)wparam) == IDC_LISTVIEW)
+			HMENU hmenu;
+			HMENU hsubmenu;
+
+			if (GetDlgCtrlID ((HWND)wparam) != IDC_LISTVIEW)
+				break;
+
+			// localize
+			hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+
+			if (!hmenu)
+				break;
+
+			hsubmenu = GetSubMenu (hmenu, 0);
+
+			if (hsubmenu)
 			{
-				// localize
-				HMENU hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+				_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 
-				if (hmenu)
-				{
-					HMENU hsubmenu = GetSubMenu (hmenu, 0);
+				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
+					_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
 
-					if (hsubmenu)
-					{
-						_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
-
-						if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
-							_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
-
-						_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
-					}
-
-					DestroyMenu (hmenu);
-				}
+				_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
 			}
+
+			DestroyMenu (hmenu);
 
 			break;
 		}
@@ -392,7 +402,9 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 					if ((lpnmdi->uFlags & TTF_IDISHWND) != 0)
 					{
 						WCHAR buffer[256] = {0};
-						INT ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
+						INT ctrl_id;
+
+						ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
 						if (ctrl_id == IDC_CURRENT)
 							_r_str_copy (buffer, RTL_NUMBER_OF (buffer), _r_locale_getstring (IDS_CURRENT));
@@ -420,18 +432,21 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 			}
 			else if ((ctrl_id >= IDX_TIMEZONE && ctrl_id <= IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1)))
 			{
-				UINT idx = ctrl_id - IDX_TIMEZONE;
-				LONG bias = int_timezones[idx];
+				SYSTEMTIME current_time;
+				SYSTEMTIME system_time;
+				HMENU submenu_timezone;
+				UINT idx;
+				LONG bias;
+
+				idx = ctrl_id - IDX_TIMEZONE;
+				bias = int_timezones[idx];
 
 				_r_config_setlong (L"TimezoneBias", bias);
 
-				HMENU submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
+				submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 
 				if (submenu_timezone)
 					_r_menu_checkitem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, ctrl_id);
-
-				SYSTEMTIME current_time;
-				SYSTEMTIME system_time;
 
 				if (SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)&current_time) == GDT_VALID)
 				{
@@ -550,33 +565,15 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 
 INT APIENTRY wWinMain (_In_ HINSTANCE hinst, _In_opt_ HINSTANCE prev_hinst, _In_ LPWSTR cmdline, _In_ INT show_cmd)
 {
-	MSG msg;
-	HACCEL haccel;
 	HWND hwnd;
 
-	if (_r_app_initialize ())
-	{
-		hwnd = _r_app_createwindow (IDD_MAIN, IDI_MAIN, &DlgProc);
+	if (!_r_app_initialize ())
+		return ERROR_APP_INIT_FAILURE;
 
-		if (hwnd)
-		{
-			haccel = LoadAccelerators (hinst, MAKEINTRESOURCE (IDA_MAIN));
+	hwnd = _r_app_createwindow (MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
-			if (haccel)
-			{
-				while (GetMessage (&msg, NULL, 0, 0) > 0)
-				{
-					if (!TranslateAccelerator (hwnd, haccel, &msg) && !IsDialogMessage (hwnd, &msg))
-					{
-						TranslateMessage (&msg);
-						DispatchMessage (&msg);
-					}
-				}
+	if (!hwnd)
+		return ERROR_APP_INIT_FAILURE;
 
-				DestroyAcceleratorTable (haccel);
-			}
-		}
-	}
-
-	return ERROR_SUCCESS;
+	return _r_wnd_messageloop (hwnd, MAKEINTRESOURCE (IDA_MAIN));
 }
