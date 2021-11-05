@@ -263,7 +263,7 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 			if (hmenu)
 			{
 				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"AlwaysOnTop", FALSE) ? MF_CHECKED : MF_UNCHECKED));
-				CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"CheckUpdates", TRUE) ? MF_CHECKED : MF_UNCHECKED));
+				CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (_r_update_isenabled (FALSE) ? MF_CHECKED : MF_UNCHECKED));
 			}
 
 			break;
@@ -480,10 +480,10 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 
 				case IDM_CHECKUPDATES_CHK:
 				{
-					BOOLEAN new_val = !_r_config_getboolean (L"CheckUpdates", TRUE);
+					BOOLEAN new_val = !_r_update_isenabled (FALSE);
 
 					CheckMenuItem (GetMenu (hwnd), ctrl_id, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
-					_r_config_setboolean (L"CheckUpdates", new_val);
+					_r_update_enable (new_val);
 
 					break;
 				}
