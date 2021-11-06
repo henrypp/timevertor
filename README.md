@@ -11,7 +11,7 @@
 -------
 
 <p align="center">
-	<img src="https://www.henrypp.org/images/timevertor.png?upd" />
+	<img src="https://www.henrypp.org/images/timevertor.png?cachefix" />
 </p>
 
 ### Description:
