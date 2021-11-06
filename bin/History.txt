@@ -1,3 +1,8 @@
+v1.4.3 (7 November 2021)
+- added arm64 binaries
+- updated project sdk
+- fixed bugs
+
 v1.4.2 (28 April 2021)
 - updated project sdk
 
