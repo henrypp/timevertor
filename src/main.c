@@ -491,22 +491,17 @@ INT_PTR CALLBACK DlgProc (
 				case TTN_GETDISPINFO:
 				{
 					LPNMTTDISPINFO lpnmdi;
+					INT ctrl_id;
 
 					lpnmdi = (LPNMTTDISPINFO)lparam;
 
-					if ((lpnmdi->uFlags & TTF_IDISHWND) != 0)
-					{
-						WCHAR buffer[256] = {0};
-						INT ctrl_id;
+					if (!(lpnmdi->uFlags & TTF_IDISHWND) != 0)
+						break;
 
-						ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
+					ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
-						if (ctrl_id == IDC_CURRENT)
-							_r_str_copy (buffer, RTL_NUMBER_OF (buffer), _r_locale_getstring (IDS_CURRENT));
-
-						if (!_r_str_isempty (buffer))
-							lpnmdi->lpszText = buffer;
-					}
+					if (ctrl_id == IDC_CURRENT)
+						lpnmdi->lpszText = (LPWSTR)_r_locale_getstring (IDS_CURRENT);
 
 					break;
 				}
