@@ -1,12 +1,10 @@
 // TimeVertor
-// Copyright (c) 2012-2021 Henry++
+// Copyright (c) 2012-2022 Henry++
 
 #pragma once
 
-#include <windows.h>
-#include <commctrl.h>
-
 #include "routine.h"
+
 #include "resource.h"
 #include "app.h"
 

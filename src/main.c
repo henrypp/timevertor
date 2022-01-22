@@ -1,5 +1,5 @@
 // TimeVertor
-// Copyright (c) 2012-2021 Henry++
+// Copyright (c) 2012-2022 Henry++
 
 #include "routine.h"
 
@@ -11,7 +11,13 @@
 
 #include "resource.h"
 
-VOID _app_timezone2string (_Out_writes_ (length) LPWSTR buffer, _In_ SIZE_T length, _In_ LONG bias, _In_ BOOLEAN divide, _In_ LPCWSTR utcname)
+VOID _app_timezone2string (
+	_Out_writes_ (length) LPWSTR buffer,
+	_In_ SIZE_T length,
+	_In_ LONG bias,
+	_In_ BOOLEAN divide,
+	_In_ LPCWSTR utcname
+)
 {
 	if (bias == 0)
 	{
@@ -19,7 +25,15 @@ VOID _app_timezone2string (_Out_writes_ (length) LPWSTR buffer, _In_ SIZE_T leng
 	}
 	else
 	{
-		_r_str_printf (buffer, length, L"%c%02u%s%02u", ((bias > 0) ? L'-' : L'+'), (UINT)floor ((long double)abs (bias) / 60.0), divide ? L":" : L"", (LONG)abs (bias) % 60);
+		_r_str_printf (
+			buffer,
+			length,
+			L"%c%02u%s%02u",
+			((bias > 0) ? L'-' : L'+'),
+			(UINT)floor ((long double)abs (bias) / 60.0),
+			divide ? L":" : L"",
+			(LONG)abs (bias) % 60
+		);
 	}
 }
 
@@ -42,7 +56,11 @@ FORCEINLINE LONG64 _app_getlastesttimestamp ()
 	return _r_config_getlong64 (L"LatestTimestamp", _r_unixtime_now ());
 }
 
-VOID _app_converttime (_In_ LPSYSTEMTIME current_time, _In_ LONG bias, _Out_ LPSYSTEMTIME system_time)
+VOID _app_converttime (
+	_In_ LPSYSTEMTIME current_time,
+	_In_ LONG bias,
+	_Out_ LPSYSTEMTIME system_time
+)
 {
 	TIME_ZONE_INFORMATION tzi = {0};
 
@@ -52,69 +70,141 @@ VOID _app_converttime (_In_ LPSYSTEMTIME current_time, _In_ LONG bias, _Out_ LPS
 		RtlCopyMemory (system_time, current_time, sizeof (SYSTEMTIME));
 }
 
-VOID _app_timeconvert (_Out_writes_ (length) LPWSTR buffer, _In_ SIZE_T length, _In_ LONG64 unixtime, _In_ LONG bias, _In_ LPSYSTEMTIME lpst, _In_ PULARGE_INTEGER pul, _In_ ENUM_DATE_TYPE type)
+VOID _app_timeconvert (
+	_Out_writes_ (buffer_size) _Always_ (_Post_z_) LPWSTR buffer,
+	_In_ SIZE_T buffer_size,
+	_In_ LONG64 unixtime,
+	_In_ LONG bias,
+	_In_ LPSYSTEMTIME lpst,
+	_In_ PULARGE_INTEGER pul,
+	_In_ ENUM_DATE_TYPE type
+)
 {
 	WCHAR timezone[32] = {0};
 
-	if (type == TypeRfc2822)
+	switch (type)
 	{
-		_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, FALSE, L"GMT");
-		_r_str_printf (buffer, length, L"%s, %02d %s %04d %02d:%02d:%02d %s", str_dayofweek[lpst->wDayOfWeek], lpst->wDay, str_month[lpst->wMonth - 1], lpst->wYear, lpst->wHour, lpst->wMinute, lpst->wSecond, timezone);
-	}
-	else if (type == TypeIso8601)
-	{
-		_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"Z");
-		_r_str_printf (buffer, length, L"%04d-%02d-%02dT%02d:%02d:%02d%s", lpst->wYear, lpst->wMonth, lpst->wDay, lpst->wHour, lpst->wMinute, lpst->wSecond, timezone);
-	}
-	else if (type == TypeUnixtime)
-	{
-		_r_str_printf (buffer, length, L"%" TEXT (PR_LONG64), unixtime);
-	}
-	else if (type == TypeMactime)
-	{
-		_r_str_printf (buffer, length, L"%" TEXT (PR_LONG64), unixtime + MAC_TIMESTAMP);
-	}
-	else if (type == TypeMicrosofttime)
-	{
-		_r_str_printf (buffer, length, L"%.09f", ((DOUBLE)pul->QuadPart / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP);
-	}
-	else if (type == TypeFiletime)
-	{
-		_r_str_printf (buffer, length, L"%" TEXT (PR_ULONG64), pul->QuadPart);
+		case TypeRfc2822:
+		{
+			_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, FALSE, L"GMT");
+
+			_r_str_printf (
+				buffer,
+				buffer_size,
+				L"%s, %02d %s %04d %02d:%02d:%02d %s",
+				str_dayofweek[lpst->wDayOfWeek],
+				lpst->wDay, str_month[lpst->wMonth - 1],
+				lpst->wYear, lpst->wHour,
+				lpst->wMinute,
+				lpst->wSecond,
+				timezone
+			);
+
+			break;
+		}
+
+		case TypeIso8601:
+		{
+			_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"Z");
+
+			_r_str_printf (
+				buffer,
+				buffer_size,
+				L"%04d-%02d-%02dT%02d:%02d:%02d%s",
+				lpst->wYear,
+				lpst->wMonth,
+				lpst->wDay,
+				lpst->wHour,
+				lpst->wMinute,
+				lpst->wSecond,
+				timezone
+			);
+
+			break;
+		}
+
+		case TypeUnixtime:
+		{
+			_r_str_printf (buffer, buffer_size, L"%" TEXT (PR_LONG64), unixtime);
+			break;
+		}
+
+		case TypeMactime:
+		{
+			_r_str_printf (buffer, buffer_size, L"%" TEXT (PR_LONG64), unixtime + MAC_TIMESTAMP);
+			break;
+		}
+
+		case TypeMicrosofttime:
+		{
+			_r_str_printf (
+				buffer,
+				buffer_size,
+				L"%.09f",
+				((DOUBLE)pul->QuadPart / (24.0 * (60.0 * (60.0 * 10000000.0)))) - MICROSOFT_TIMESTAMP
+			);
+
+			break;
+		}
+
+		case TypeFiletime:
+		{
+			_r_str_printf (buffer, buffer_size, L"%" TEXT (PR_ULONG64), pul->QuadPart);
+			break;
+		}
+
+		default:
+		{
+			*buffer = UNICODE_NULL;
+		}
 	}
 }
 
-LPCWSTR _app_gettimedescription (_In_ ENUM_DATE_TYPE type, _In_ BOOLEAN is_desc)
+LPCWSTR _app_gettimedescription (
+	_In_ ENUM_DATE_TYPE type,
+	_In_ BOOLEAN is_desc
+)
 {
-	if (type == TypeRfc2822)
+	switch (type)
 	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822);
-	}
-	else if (type == TypeIso8601)
-	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_ISO8601 : IDS_FMTNAME_ISO8601);
-	}
-	else if (type == TypeUnixtime)
-	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_UNIXTIME : IDS_FMTNAME_UNIXTIME);
-	}
-	else if (type == TypeMactime)
-	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_MACTIME : IDS_FMTNAME_MACTIME);
-	}
-	else if (type == TypeMicrosofttime)
-	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_MICROSOFTTIME : IDS_FMTNAME_MICROSOFTTIME);
-	}
-	else if (type == TypeFiletime)
-	{
-		return _r_locale_getstring (is_desc ? IDS_FMTDESC_FILETIME : IDS_FMTNAME_FILETIME);
+		case TypeRfc2822:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822);
+		}
+
+		case TypeIso8601:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_ISO8601 : IDS_FMTNAME_ISO8601);
+		}
+
+		case TypeUnixtime:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_UNIXTIME : IDS_FMTNAME_UNIXTIME);
+		}
+
+		case TypeMactime:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_MACTIME : IDS_FMTNAME_MACTIME);
+		}
+
+		case TypeMicrosofttime:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_MICROSOFTTIME : IDS_FMTNAME_MICROSOFTTIME);
+		}
+
+		case TypeFiletime:
+		{
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_FILETIME : IDS_FMTNAME_FILETIME);
+		}
 	}
 
 	return NULL;
 }
 
-VOID _app_printdate (_In_ HWND hwnd, _In_ LPSYSTEMTIME system_time)
+VOID _app_printdate (
+	_In_ HWND hwnd,
+	_In_ LPSYSTEMTIME system_time
+)
 {
 	ULARGE_INTEGER ul;
 	FILETIME filetime;
@@ -140,7 +230,12 @@ VOID _app_printdate (_In_ HWND hwnd, _In_ LPSYSTEMTIME system_time)
 	}
 }
 
-INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In_ LPARAM lparam)
+INT_PTR CALLBACK DlgProc (
+	_In_ HWND hwnd,
+	_In_ UINT msg,
+	_In_ WPARAM wparam,
+	_In_ LPARAM lparam
+)
 {
 	switch (msg)
 	{
@@ -553,7 +648,9 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 
 				case IDM_SELECT_ALL:
 				{
-					ListView_SetItemState (GetDlgItem (hwnd, IDC_LISTVIEW), -1, LVIS_SELECTED, LVIS_SELECTED);
+					if (GetFocus () == GetDlgItem (hwnd, IDC_LISTVIEW))
+						_r_listview_setitemstate (hwnd, IDC_LISTVIEW, -1, LVIS_SELECTED, LVIS_SELECTED);
+
 					break;
 				}
 			}
@@ -563,14 +660,19 @@ INT_PTR CALLBACK DlgProc (_In_ HWND hwnd, _In_ UINT msg, _In_ WPARAM wparam, _In
 	return FALSE;
 }
 
-INT APIENTRY wWinMain (_In_ HINSTANCE hinst, _In_opt_ HINSTANCE prev_hinst, _In_ LPWSTR cmdline, _In_ INT show_cmd)
+INT APIENTRY wWinMain (
+	_In_ HINSTANCE hinst,
+	_In_opt_ HINSTANCE prev_hinst,
+	_In_ LPWSTR cmdline,
+	_In_ INT show_cmd
+)
 {
 	HWND hwnd;
 
 	if (!_r_app_initialize ())
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
