@@ -71,7 +71,7 @@ VOID _app_converttime (
 }
 
 VOID _app_timeconvert (
-	_Out_writes_ (buffer_size) _Always_ (_Post_z_) LPWSTR buffer,
+	_Out_writes_z_ (buffer_size) LPWSTR buffer,
 	_In_ SIZE_T buffer_size,
 	_In_ LONG64 unixtime,
 	_In_ LONG bias,
@@ -672,5 +672,5 @@ INT APIENTRY wWinMain (
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
 
-	return _r_wnd_messageloop (hwnd, MAKEINTRESOURCE (IDA_MAIN));
+	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCE (IDA_MAIN));
 }
