@@ -37,7 +37,7 @@ VOID _app_timezone2string (
 	}
 }
 
-FORCEINLINE LONG _app_getdefaultbias ()
+LONG _app_getdefaultbias ()
 {
 	TIME_ZONE_INFORMATION tzi = {0};
 
@@ -201,6 +201,27 @@ LPCWSTR _app_gettimedescription (
 	return NULL;
 }
 
+BOOLEAN _app_getdate (
+	_In_ HWND hwnd,
+	_In_ INT ctrl_id,
+	_Out_ LPSYSTEMTIME current_time
+)
+{
+	LRESULT status;
+
+	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
+
+	status = SendDlgItemMessage (
+		hwnd,
+		IDC_INPUT,
+		DTM_GETSYSTEMTIME,
+		GDT_VALID,
+		(LPARAM)current_time
+	);
+
+	return (status == GDT_VALID);
+}
+
 VOID _app_printdate (
 	_In_ HWND hwnd,
 	_In_ LPSYSTEMTIME system_time
@@ -220,11 +241,25 @@ VOID _app_printdate (
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
+	SendDlgItemMessage (
+		hwnd,
+		IDC_INPUT,
+		DTM_SETSYSTEMTIME,
+		GDT_VALID,
+		(LPARAM)system_time
+	);
 
 	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
-		_app_timeconvert (time_string, RTL_NUMBER_OF (time_string), unixtime, bias, system_time, &ul, i);
+		_app_timeconvert (
+			time_string,
+			RTL_NUMBER_OF (time_string),
+			unixtime,
+			bias,
+			system_time,
+			&ul,
+			i
+		);
 
 		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, time_string);
 	}
@@ -241,15 +276,22 @@ INT_PTR CALLBACK DlgProc (
 	{
 		case WM_INITDIALOG:
 		{
-			WCHAR date_format[128] = {0};
-			WCHAR time_format[128] = {0};
+			SYSTEMTIME current_time;
+			SYSTEMTIME system_time;
 
-			SYSTEMTIME current_time = {0};
-			SYSTEMTIME system_time = {0};
+			WCHAR date_format[128];
+			WCHAR time_format[128];
+
+			WCHAR menu_title[32];
+			WCHAR timezone[32];
 
 			HMENU hmenu;
 			HMENU hsubmenu;
 			HWND htip;
+
+			LONG current_bias;
+			LONG default_bias;
+			LONG bias;
 
 			// configure timezone
 			hmenu = GetMenu (hwnd);
@@ -263,43 +305,43 @@ INT_PTR CALLBACK DlgProc (
 					// clear menu
 					_r_menu_clearitems (hsubmenu);
 
-					MENUITEMINFO mii;
-					WCHAR menu_title[32];
-					WCHAR timezone[32];
-					LONG bias;
-
-					LONG current_bias = _app_getcurrentbias ();
-					LONG default_bias = _app_getdefaultbias ();
+					current_bias = _app_getcurrentbias ();
+					default_bias = _app_getdefaultbias ();
 
 					for (SIZE_T i = 0; i < RTL_NUMBER_OF (int_timezones); i++)
 					{
 						bias = int_timezones[i];
 
-						_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"+00:00 (UTC)");
+						_app_timezone2string (
+							timezone,
+							RTL_NUMBER_OF (timezone),
+							bias,
+							TRUE,
+							L"+00:00 (UTC)"
+						);
+
 						_r_str_printf (menu_title, RTL_NUMBER_OF (menu_title), L"GMT %s", timezone);
 
 						if (bias == default_bias)
 							_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
 
-						RtlZeroMemory (&mii, sizeof (mii));
-
-						mii.cbSize = sizeof (mii);
-						mii.fMask = MIIM_ID | MIIM_STRING;
-						mii.fType = MFT_STRING;
-						mii.fState = MFS_DEFAULT;
-						mii.dwTypeData = menu_title;
-						mii.wID = IDX_TIMEZONE + (UINT)i;
-
-						InsertMenuItem (hsubmenu, mii.wID, FALSE, &mii);
-
-						if (bias == current_bias)
-							_r_menu_checkitem (hsubmenu, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, mii.wID);
+						_r_menu_additem_ex (
+							hsubmenu,
+							IDX_TIMEZONE + (UINT)i,
+							menu_title,
+							(bias == current_bias) ? MF_CHECKED : MF_UNCHECKED
+						);
 					}
 				}
 			}
 
 			// configure listview
-			_r_listview_setstyle (hwnd, IDC_LISTVIEW, LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP, FALSE);
+			_r_listview_setstyle (
+				hwnd,
+				IDC_LISTVIEW,
+				LVS_EX_DOUBLEBUFFER | LVS_EX_FULLROWSELECT | LVS_EX_INFOTIP | LVS_EX_LABELTIP,
+				FALSE
+			);
 
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -39, LVCFMT_LEFT);
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, NULL, -61, LVCFMT_RIGHT);
@@ -308,10 +350,8 @@ INT_PTR CALLBACK DlgProc (
 				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"");
 
 			// configure datetime format
-			if (
-				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
-				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format))
-				)
+			if (GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
+				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format)))
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
@@ -319,10 +359,12 @@ INT_PTR CALLBACK DlgProc (
 			}
 
 			// print latest timestamp
-			_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time);
+			if (_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time))
+			{
+				_app_converttime (&current_time, 0, &system_time);
 
-			_app_converttime (&current_time, 0, &system_time);
-			_app_printdate (hwnd, &system_time);
+				_app_printdate (hwnd, &system_time);
+			}
 
 			// set control tip
 			htip = _r_ctrl_createtip (hwnd);
@@ -335,13 +377,15 @@ INT_PTR CALLBACK DlgProc (
 
 		case WM_DESTROY:
 		{
-			SYSTEMTIME system_time = {0};
-			SYSTEMTIME current_time = {0};
+			SYSTEMTIME system_time;
+			SYSTEMTIME current_time;
 
-			SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)&system_time);
-			_app_converttime (&system_time, 0, &current_time);
+			if (_app_getdate (hwnd, IDC_INPUT, &system_time))
+			{
+				_app_converttime (&system_time, 0, &current_time);
 
-			_r_config_setlong64 (L"LatestTimestamp", _r_unixtime_from_systemtime (&current_time));
+				_r_config_setlong64 (L"LatestTimestamp", _r_unixtime_from_systemtime (&current_time));
+			}
 
 			PostQuitMessage (0);
 
@@ -357,8 +401,21 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hmenu)
 			{
-				CheckMenuItem (hmenu, IDM_ALWAYSONTOP_CHK, MF_BYCOMMAND | (_r_config_getboolean (L"AlwaysOnTop", FALSE) ? MF_CHECKED : MF_UNCHECKED));
-				CheckMenuItem (hmenu, IDM_CHECKUPDATES_CHK, MF_BYCOMMAND | (_r_update_isenabled (FALSE) ? MF_CHECKED : MF_UNCHECKED));
+				_r_menu_checkitem (
+					hmenu,
+					IDM_ALWAYSONTOP_CHK,
+					0,
+					MF_BYCOMMAND,
+					_r_config_getboolean (L"AlwaysOnTop", FALSE)
+				);
+
+				_r_menu_checkitem (
+					hmenu,
+					IDM_CHECKUPDATES_CHK,
+					0,
+					MF_BYCOMMAND,
+					_r_update_isenabled (FALSE)
+				);
 			}
 
 			break;
@@ -374,24 +431,72 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hmenu)
 			{
-				hsubmenu = GetSubMenu (hmenu, 1);
-
 				_r_menu_setitemtext (hmenu, 0, TRUE, _r_locale_getstring (IDS_FILE));
 				_r_menu_setitemtext (hmenu, 1, TRUE, _r_locale_getstring (IDS_SETTINGS));
 				_r_menu_setitemtext (hmenu, 2, TRUE, _r_locale_getstring (IDS_HELP));
 
-				_r_menu_setitemtextformat (hmenu, IDM_EXIT, FALSE, L"%s\tEsc", _r_locale_getstring (IDS_EXIT));
-				_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
-				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES_CHK, FALSE, _r_locale_getstring (IDS_CHECKUPDATES_CHK));
+				_r_menu_setitemtextformat (
+					hmenu,
+					IDM_EXIT,
+					FALSE,
+					L"%s\tEsc",
+					_r_locale_getstring (IDS_EXIT)
+				);
 
-				_r_menu_setitemtext (hmenu, IDM_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
-				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES, FALSE, _r_locale_getstring (IDS_CHECKUPDATES));
-				_r_menu_setitemtextformat (hmenu, IDM_ABOUT, FALSE, L"%s\tF1", _r_locale_getstring (IDS_ABOUT));
+				_r_menu_setitemtext (
+					hmenu,
+					IDM_ALWAYSONTOP_CHK,
+					FALSE,
+					_r_locale_getstring (IDS_ALWAYSONTOP_CHK)
+				);
+
+				_r_menu_setitemtext (
+					hmenu,
+					IDM_CHECKUPDATES_CHK,
+					FALSE,
+					_r_locale_getstring (IDS_CHECKUPDATES_CHK)
+				);
+
+				_r_menu_setitemtext (
+					hmenu,
+					IDM_WEBSITE,
+					FALSE,
+					_r_locale_getstring (IDS_WEBSITE)
+				);
+
+				_r_menu_setitemtext (
+					hmenu,
+					IDM_CHECKUPDATES,
+					FALSE,
+					_r_locale_getstring (IDS_CHECKUPDATES)
+				);
+
+				_r_menu_setitemtextformat (
+					hmenu,
+					IDM_ABOUT,
+					FALSE,
+					L"%s\tF1",
+					_r_locale_getstring (IDS_ABOUT)
+				);
+
+				hsubmenu = GetSubMenu (hmenu, 1);
 
 				if (hsubmenu)
 				{
-					_r_menu_setitemtext (hsubmenu, TIMEZONE_MENU, TRUE, _r_locale_getstring (IDS_TIMEZONE));
-					_r_menu_setitemtextformat (hsubmenu, LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
+					_r_menu_setitemtext (
+						hsubmenu,
+						TIMEZONE_MENU,
+						TRUE,
+						_r_locale_getstring (IDS_TIMEZONE)
+					);
+
+					_r_menu_setitemtextformat (
+						hsubmenu,
+						LANG_MENU,
+						TRUE,
+						L"%s (Language)",
+						_r_locale_getstring (IDS_LANGUAGE)
+					);
 
 					_r_locale_enum (hsubmenu, LANG_MENU, IDX_LANGUAGE); // enum localizations
 				}
@@ -430,7 +535,13 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hsubmenu)
 			{
-				_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
+				_r_menu_setitemtextformat (
+					hsubmenu,
+					IDM_COPY,
+					FALSE,
+					L"%s\tCtrl+C",
+					_r_locale_getstring (IDS_COPY)
+				);
 
 				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
 					_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
@@ -483,7 +594,11 @@ INT_PTR CALLBACK DlgProc (
 
 					lpnmlv = (LPNMLVGETINFOTIP)lparam;
 
-					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription (lpnmlv->iItem, TRUE));
+					_r_str_copy (
+						lpnmlv->pszText,
+						lpnmlv->cchTextMax,
+						_app_gettimedescription (lpnmlv->iItem, TRUE)
+					);
 
 					break;
 				}
@@ -514,19 +629,21 @@ INT_PTR CALLBACK DlgProc (
 		{
 			INT ctrl_id = LOWORD (wparam);
 
-			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT)_r_locale_getcount () + 1)
+			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE &&
+				ctrl_id <= IDX_LANGUAGE + (INT)_r_locale_getcount () + 1)
 			{
 				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
 				return FALSE;
 			}
-			else if ((ctrl_id >= IDX_TIMEZONE && ctrl_id <= IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1)))
+			else if ((ctrl_id >= IDX_TIMEZONE &&
+					 ctrl_id <= IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1)))
 			{
 				SYSTEMTIME current_time;
 				SYSTEMTIME system_time;
 				HMENU submenu_timezone;
-				UINT idx;
 				LONG bias;
+				UINT idx;
 
 				idx = ctrl_id - IDX_TIMEZONE;
 				bias = int_timezones[idx];
@@ -536,11 +653,20 @@ INT_PTR CALLBACK DlgProc (
 				submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 
 				if (submenu_timezone)
-					_r_menu_checkitem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, ctrl_id);
+				{
+					_r_menu_checkitem (
+						submenu_timezone,
+						IDX_TIMEZONE,
+						IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1),
+						MF_BYCOMMAND,
+						ctrl_id
+					);
+				}
 
-				if (SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)&current_time) == GDT_VALID)
+				if (_app_getdate (hwnd, IDC_INPUT, &current_time))
 				{
 					_app_converttime (&current_time, bias, &system_time);
+
 					_app_printdate (hwnd, &system_time);
 				}
 
@@ -558,9 +684,18 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_ALWAYSONTOP_CHK:
 				{
-					BOOLEAN new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					BOOLEAN new_val;
 
-					CheckMenuItem (GetMenu (hwnd), ctrl_id, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+
+					_r_menu_checkitem (
+						GetMenu (hwnd),
+						ctrl_id,
+						0,
+						MF_BYCOMMAND,
+						new_val
+					);
+
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
@@ -570,10 +705,19 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_CHECKUPDATES_CHK:
 				{
-					BOOLEAN new_val = !_r_update_isenabled (FALSE);
+					BOOLEAN new_val;
 
-					CheckMenuItem (GetMenu (hwnd), ctrl_id, MF_BYCOMMAND | (new_val ? MF_CHECKED : MF_UNCHECKED));
+					new_val = !_r_update_isenabled (FALSE);
+
 					_r_update_enable (new_val);
+
+					_r_menu_checkitem (
+						GetMenu (hwnd),
+						ctrl_id,
+						0,
+						MF_BYCOMMAND,
+						new_val
+					);
 
 					break;
 				}
@@ -598,40 +742,45 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_COPY:
 				{
-					R_STRINGBUILDER buffer;
+					R_STRINGBUILDER sb;
 					PR_STRING string;
 					INT item_id = -1;
 
-					_r_obj_initializestringbuilder (&buffer);
+					_r_obj_initializestringbuilder (&sb);
 
-					while ((item_id = (INT)SendDlgItemMessage (hwnd, IDC_LISTVIEW, LVM_GETNEXTITEM, (WPARAM)item_id, LVNI_SELECTED)) != -1)
+					while ((item_id = (INT)SendDlgItemMessage (
+						hwnd,
+						IDC_LISTVIEW,
+						LVM_GETNEXTITEM,
+						(WPARAM)item_id,
+						LVNI_SELECTED)) != -1)
 					{
 						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, 1);
 
 						if (string)
 						{
-							_r_obj_appendstringbuilder2 (&buffer, string);
-							_r_obj_appendstringbuilder (&buffer, L"\r\n");
+							_r_obj_appendstringbuilder2 (&sb, string);
+							_r_obj_appendstringbuilder (&sb, L"\r\n");
 
 							_r_obj_dereference (string);
 						}
 					}
 
-					string = _r_obj_finalstringbuilder (&buffer);
+					string = _r_obj_finalstringbuilder (&sb);
 
 					_r_str_trimstring2 (string, L"\r\n ", 0);
 
 					_r_clipboard_set (hwnd, &string->sr);
 
-					_r_obj_deletestringbuilder (&buffer);
+					_r_obj_dereference (string);
 
 					break;
 				}
 
 				case IDC_CURRENT:
 				{
-					SYSTEMTIME current_time = {0};
-					SYSTEMTIME system_time = {0};
+					SYSTEMTIME current_time;
+					SYSTEMTIME system_time;
 
 					GetSystemTime (&current_time);
 
@@ -643,8 +792,10 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_SELECT_ALL:
 				{
-					if (GetFocus () == GetDlgItem (hwnd, IDC_LISTVIEW))
-						_r_listview_setitemstate (hwnd, IDC_LISTVIEW, -1, LVIS_SELECTED, LVIS_SELECTED);
+					if (GetFocus () != GetDlgItem (hwnd, IDC_LISTVIEW))
+						break;
+
+					_r_listview_setitemstate (hwnd, IDC_LISTVIEW, -1, LVIS_SELECTED, LVIS_SELECTED);
 
 					break;
 				}
@@ -667,7 +818,12 @@ INT APIENTRY wWinMain (
 	if (!_r_app_initialize ())
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
+	hwnd = _r_app_createwindow (
+		hinst,
+		MAKEINTRESOURCE (IDD_MAIN),
+		MAKEINTRESOURCE (IDI_MAIN),
+		&DlgProc
+	);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
