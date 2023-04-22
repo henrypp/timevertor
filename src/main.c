@@ -1,5 +1,5 @@
 // TimeVertor
-// Copyright (c) 2012-2022 Henry++
+// Copyright (c) 2012-2023 Henry++
 
 #include "routine.h"
 
@@ -211,13 +211,7 @@ BOOLEAN _app_getdate (
 
 	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
 
-	status = SendDlgItemMessage (
-		hwnd,
-		IDC_INPUT,
-		DTM_GETSYSTEMTIME,
-		GDT_VALID,
-		(LPARAM)current_time
-	);
+	status = SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
 
 	return (status == GDT_VALID);
 }
@@ -241,25 +235,11 @@ VOID _app_printdate (
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-	SendDlgItemMessage (
-		hwnd,
-		IDC_INPUT,
-		DTM_SETSYSTEMTIME,
-		GDT_VALID,
-		(LPARAM)system_time
-	);
+	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
 
 	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
-		_app_timeconvert (
-			time_string,
-			RTL_NUMBER_OF (time_string),
-			unixtime,
-			bias,
-			system_time,
-			&ul,
-			i
-		);
+		_app_timeconvert (time_string, RTL_NUMBER_OF (time_string), unixtime, bias, system_time, &ul, i);
 
 		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, time_string);
 	}
@@ -278,17 +258,13 @@ INT_PTR CALLBACK DlgProc (
 		{
 			SYSTEMTIME current_time;
 			SYSTEMTIME system_time;
-
 			WCHAR date_format[128];
 			WCHAR time_format[128];
-
 			WCHAR menu_title[32];
 			WCHAR timezone[32];
-
 			HMENU hmenu;
 			HMENU hsubmenu;
 			HWND htip;
-
 			LONG current_bias;
 			LONG default_bias;
 			LONG bias;
@@ -312,25 +288,14 @@ INT_PTR CALLBACK DlgProc (
 					{
 						bias = int_timezones[i];
 
-						_app_timezone2string (
-							timezone,
-							RTL_NUMBER_OF (timezone),
-							bias,
-							TRUE,
-							L"+00:00 (UTC)"
-						);
+						_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"+00:00 (UTC)");
 
 						_r_str_printf (menu_title, RTL_NUMBER_OF (menu_title), L"GMT %s", timezone);
 
 						if (bias == default_bias)
 							_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
 
-						_r_menu_additem_ex (
-							hsubmenu,
-							IDX_TIMEZONE + (UINT)i,
-							menu_title,
-							(bias == current_bias) ? MF_CHECKED : MF_UNCHECKED
-						);
+						_r_menu_additem_ex (hsubmenu, IDX_TIMEZONE + (UINT)i, menu_title, (bias == current_bias) ? MF_CHECKED : MF_UNCHECKED);
 					}
 				}
 			}
@@ -399,24 +364,11 @@ INT_PTR CALLBACK DlgProc (
 
 			hmenu = GetMenu (hwnd);
 
-			if (hmenu)
-			{
-				_r_menu_checkitem (
-					hmenu,
-					IDM_ALWAYSONTOP_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_config_getboolean (L"AlwaysOnTop", FALSE)
-				);
+			if (!hmenu)
+				break;
 
-				_r_menu_checkitem (
-					hmenu,
-					IDM_CHECKUPDATES_CHK,
-					0,
-					MF_BYCOMMAND,
-					_r_update_isenabled (FALSE)
-				);
-			}
+			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+			_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 
 			break;
 		}
@@ -434,69 +386,19 @@ INT_PTR CALLBACK DlgProc (
 				_r_menu_setitemtext (hmenu, 0, TRUE, _r_locale_getstring (IDS_FILE));
 				_r_menu_setitemtext (hmenu, 1, TRUE, _r_locale_getstring (IDS_SETTINGS));
 				_r_menu_setitemtext (hmenu, 2, TRUE, _r_locale_getstring (IDS_HELP));
-
-				_r_menu_setitemtextformat (
-					hmenu,
-					IDM_EXIT,
-					FALSE,
-					L"%s\tEsc",
-					_r_locale_getstring (IDS_EXIT)
-				);
-
-				_r_menu_setitemtext (
-					hmenu,
-					IDM_ALWAYSONTOP_CHK,
-					FALSE,
-					_r_locale_getstring (IDS_ALWAYSONTOP_CHK)
-				);
-
-				_r_menu_setitemtext (
-					hmenu,
-					IDM_CHECKUPDATES_CHK,
-					FALSE,
-					_r_locale_getstring (IDS_CHECKUPDATES_CHK)
-				);
-
-				_r_menu_setitemtext (
-					hmenu,
-					IDM_WEBSITE,
-					FALSE,
-					_r_locale_getstring (IDS_WEBSITE)
-				);
-
-				_r_menu_setitemtext (
-					hmenu,
-					IDM_CHECKUPDATES,
-					FALSE,
-					_r_locale_getstring (IDS_CHECKUPDATES)
-				);
-
-				_r_menu_setitemtextformat (
-					hmenu,
-					IDM_ABOUT,
-					FALSE,
-					L"%s\tF1",
-					_r_locale_getstring (IDS_ABOUT)
-				);
+				_r_menu_setitemtextformat (hmenu, IDM_EXIT, FALSE, L"%s\tEsc", _r_locale_getstring (IDS_EXIT));
+				_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
+				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES_CHK, FALSE, _r_locale_getstring (IDS_CHECKUPDATES_CHK));
+				_r_menu_setitemtext (hmenu, IDM_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
+				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES, FALSE, _r_locale_getstring (IDS_CHECKUPDATES));
+				_r_menu_setitemtextformat (hmenu, IDM_ABOUT, FALSE, L"%s\tF1", _r_locale_getstring (IDS_ABOUT));
 
 				hsubmenu = GetSubMenu (hmenu, 1);
 
 				if (hsubmenu)
 				{
-					_r_menu_setitemtext (
-						hsubmenu,
-						TIMEZONE_MENU,
-						TRUE,
-						_r_locale_getstring (IDS_TIMEZONE)
-					);
-
-					_r_menu_setitemtextformat (
-						hsubmenu,
-						LANG_MENU,
-						TRUE,
-						L"%s (Language)",
-						_r_locale_getstring (IDS_LANGUAGE)
-					);
+					_r_menu_setitemtext (hsubmenu, TIMEZONE_MENU, TRUE, _r_locale_getstring (IDS_TIMEZONE));
+					_r_menu_setitemtextformat (hsubmenu, LANG_MENU, TRUE, L"%s (Language)", _r_locale_getstring (IDS_LANGUAGE));
 
 					_r_locale_enum (hsubmenu, LANG_MENU, IDX_LANGUAGE); // enum localizations
 				}
@@ -535,13 +437,7 @@ INT_PTR CALLBACK DlgProc (
 
 			if (hsubmenu)
 			{
-				_r_menu_setitemtextformat (
-					hsubmenu,
-					IDM_COPY,
-					FALSE,
-					L"%s\tCtrl+C",
-					_r_locale_getstring (IDS_COPY)
-				);
+				_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 
 				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
 					_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
@@ -594,11 +490,7 @@ INT_PTR CALLBACK DlgProc (
 
 					lpnmlv = (LPNMLVGETINFOTIP)lparam;
 
-					_r_str_copy (
-						lpnmlv->pszText,
-						lpnmlv->cchTextMax,
-						_app_gettimedescription (lpnmlv->iItem, TRUE)
-					);
+					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription (lpnmlv->iItem, TRUE));
 
 					break;
 				}
@@ -636,8 +528,7 @@ INT_PTR CALLBACK DlgProc (
 
 				return FALSE;
 			}
-			else if ((ctrl_id >= IDX_TIMEZONE &&
-					 ctrl_id <= IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1)))
+			else if ((ctrl_id >= IDX_TIMEZONE && ctrl_id <= IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1)))
 			{
 				SYSTEMTIME current_time;
 				SYSTEMTIME system_time;
@@ -653,15 +544,7 @@ INT_PTR CALLBACK DlgProc (
 				submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 
 				if (submenu_timezone)
-				{
-					_r_menu_checkitem (
-						submenu_timezone,
-						IDX_TIMEZONE,
-						IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1),
-						MF_BYCOMMAND,
-						ctrl_id
-					);
-				}
+					_r_menu_checkitem (submenu_timezone, IDX_TIMEZONE, IDX_TIMEZONE + (RTL_NUMBER_OF (int_timezones) - 1), MF_BYCOMMAND, ctrl_id);
 
 				if (_app_getdate (hwnd, IDC_INPUT, &current_time))
 				{
@@ -688,13 +571,7 @@ INT_PTR CALLBACK DlgProc (
 
 					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
 
-					_r_menu_checkitem (
-						GetMenu (hwnd),
-						ctrl_id,
-						0,
-						MF_BYCOMMAND,
-						new_val
-					);
+					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
 
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
 
@@ -711,13 +588,7 @@ INT_PTR CALLBACK DlgProc (
 
 					_r_update_enable (new_val);
 
-					_r_menu_checkitem (
-						GetMenu (hwnd),
-						ctrl_id,
-						0,
-						MF_BYCOMMAND,
-						new_val
-					);
+					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
 
 					break;
 				}
@@ -748,12 +619,7 @@ INT_PTR CALLBACK DlgProc (
 
 					_r_obj_initializestringbuilder (&sb);
 
-					while ((item_id = (INT)SendDlgItemMessage (
-						hwnd,
-						IDC_LISTVIEW,
-						LVM_GETNEXTITEM,
-						(WPARAM)item_id,
-						LVNI_SELECTED)) != -1)
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
 						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, 1);
 
@@ -818,12 +684,7 @@ INT APIENTRY wWinMain (
 	if (!_r_app_initialize ())
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (
-		hinst,
-		MAKEINTRESOURCE (IDD_MAIN),
-		MAKEINTRESOURCE (IDI_MAIN),
-		&DlgProc
-	);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
