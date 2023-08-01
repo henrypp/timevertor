@@ -39,9 +39,10 @@ VOID _app_timezone2string (
 
 LONG _app_getdefaultbias ()
 {
-	TIME_ZONE_INFORMATION tzi = {0};
+	RTL_TIME_ZONE_INFORMATION tzi = {0};
+	NTSTATUS status;
 
-	GetTimeZoneInformation (&tzi);
+	status = NtQuerySystemInformation (SystemCurrentTimeZoneInformation, &tzi, sizeof (RTL_TIME_ZONE_INFORMATION), NULL);
 
 	return tzi.Bias;
 }
@@ -479,6 +480,7 @@ INT_PTR CALLBACK DlgProc (
 					lpnmdtc = (LPNMDATETIMECHANGE)lparam;
 
 					_app_converttime (&lpnmdtc->st, 0, &system_time);
+
 					_app_printdate (hwnd, &system_time);
 
 					break;
@@ -651,6 +653,7 @@ INT_PTR CALLBACK DlgProc (
 					GetSystemTime (&current_time);
 
 					_app_converttime (&current_time, _app_getcurrentbias (), &system_time);
+
 					_app_printdate (hwnd, &system_time);
 
 					break;
