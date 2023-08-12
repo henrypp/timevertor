@@ -222,7 +222,7 @@ VOID _app_printdate (
 	_In_ LPSYSTEMTIME system_time
 )
 {
-	ULARGE_INTEGER ul;
+	ULARGE_INTEGER ul = {0};
 	FILETIME filetime;
 	WCHAR time_string[128];
 	LONG64 unixtime;
