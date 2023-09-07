@@ -325,12 +325,12 @@ INT_PTR CALLBACK DlgProc (
 			}
 
 			// print latest timestamp
-			if (_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time))
-			{
-				_app_converttime (&current_time, 0, &system_time);
+			_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time);
 
-				_app_printdate (hwnd, &system_time);
-			}
+			_app_converttime (&current_time, 0, &system_time);
+
+			_app_printdate (hwnd, &system_time);
+
 
 			// set control tip
 			htip = _r_ctrl_createtip (hwnd);
@@ -597,7 +597,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_WEBSITE:
 				{
-					ShellExecute (hwnd, NULL, _r_app_getwebsite_url (), NULL, NULL, SW_SHOWDEFAULT);
+					ShellExecute (hwnd, NULL, _r_app_getsources_url (), NULL, NULL, SW_SHOWDEFAULT);
 					break;
 				}
 
@@ -619,7 +619,7 @@ INT_PTR CALLBACK DlgProc (
 					PR_STRING string;
 					INT item_id = -1;
 
-					_r_obj_initializestringbuilder (&sb);
+					_r_obj_initializestringbuilder (&sb, 512);
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
@@ -684,7 +684,7 @@ INT APIENTRY wWinMain (
 {
 	HWND hwnd;
 
-	if (!_r_app_initialize ())
+	if (!_r_app_initialize (NULL))
 		return ERROR_APP_INIT_FAILURE;
 
 	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
