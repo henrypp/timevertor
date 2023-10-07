@@ -331,7 +331,6 @@ INT_PTR CALLBACK DlgProc (
 
 			_app_printdate (hwnd, &system_time);
 
-
 			// set control tip
 			htip = _r_ctrl_createtip (hwnd);
 
@@ -464,7 +463,7 @@ INT_PTR CALLBACK DlgProc (
 
 					lpds = (LPNMDATETIMESTRING)lparam;
 
-					_r_obj_initializestringrefconst (&user_string, lpds->pszUserString);
+					_r_obj_initializestringref (&user_string, (LPWSTR)lpds->pszUserString);
 
 					if (_r_str_isnumeric (&user_string))
 						_r_unixtime_to_systemtime (_r_str_tolong64 (&user_string), &lpds->st);
@@ -597,7 +596,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_WEBSITE:
 				{
-					ShellExecute (hwnd, NULL, _r_app_getsources_url (), NULL, NULL, SW_SHOWDEFAULT);
+					ShellExecute (hwnd, NULL, _r_app_getwebsite_url (), NULL, NULL, SW_SHOWDEFAULT);
 					break;
 				}
 
