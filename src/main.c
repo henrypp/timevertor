@@ -522,8 +522,7 @@ INT_PTR CALLBACK DlgProc (
 		{
 			INT ctrl_id = LOWORD (wparam);
 
-			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE &&
-				ctrl_id <= IDX_LANGUAGE + (INT)_r_locale_getcount () + 1)
+			if (HIWORD (wparam) == 0 && ctrl_id >= IDX_LANGUAGE && ctrl_id <= IDX_LANGUAGE + (INT)_r_locale_getcount () + 1)
 			{
 				_r_locale_apply (GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), LANG_MENU), ctrl_id, IDX_LANGUAGE);
 
@@ -596,7 +595,7 @@ INT_PTR CALLBACK DlgProc (
 
 				case IDM_WEBSITE:
 				{
-					ShellExecute (hwnd, NULL, _r_app_getwebsite_url (), NULL, NULL, SW_SHOWDEFAULT);
+					_r_shell_opendefault (_r_app_getwebsite_url ());
 					break;
 				}
 
