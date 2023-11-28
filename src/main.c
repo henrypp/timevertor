@@ -161,7 +161,7 @@ VOID _app_timeconvert (
 	}
 }
 
-LPCWSTR _app_gettimedescription (
+LPWSTR _app_gettimedescription (
 	_In_ ENUM_DATE_TYPE type,
 	_In_ BOOLEAN is_desc
 )
@@ -509,7 +509,7 @@ INT_PTR CALLBACK DlgProc (
 					ctrl_id = GetDlgCtrlID ((HWND)lpnmdi->hdr.idFrom);
 
 					if (ctrl_id == IDC_CURRENT)
-						lpnmdi->lpszText = (LPWSTR)_r_locale_getstring (IDS_CURRENT);
+						lpnmdi->lpszText = _r_locale_getstring (IDS_CURRENT);
 
 					break;
 				}
