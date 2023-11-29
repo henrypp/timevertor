@@ -316,8 +316,8 @@ INT_PTR CALLBACK DlgProc (
 				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"");
 
 			// configure datetime format
-			if (GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
-				GetLocaleInfo (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format)))
+			if (GetLocaleInfoW (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
+				GetLocaleInfoW (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format)))
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
@@ -428,7 +428,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 
 			// localize
-			hmenu = LoadMenu (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+			hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
 
 			if (!hmenu)
 				break;
@@ -458,10 +458,10 @@ INT_PTR CALLBACK DlgProc (
 			{
 				case DTN_USERSTRING:
 				{
-					LPNMDATETIMESTRING lpds;
+					LPNMDATETIMESTRINGW lpds;
 					R_STRINGREF user_string;
 
-					lpds = (LPNMDATETIMESTRING)lparam;
+					lpds = (LPNMDATETIMESTRINGW)lparam;
 
 					_r_obj_initializestringref (&user_string, (LPWSTR)lpds->pszUserString);
 
@@ -487,9 +487,9 @@ INT_PTR CALLBACK DlgProc (
 
 				case LVN_GETINFOTIP:
 				{
-					LPNMLVGETINFOTIP lpnmlv;
+					LPNMLVGETINFOTIPW lpnmlv;
 
-					lpnmlv = (LPNMLVGETINFOTIP)lparam;
+					lpnmlv = (LPNMLVGETINFOTIPW)lparam;
 
 					_r_str_copy (lpnmlv->pszText, lpnmlv->cchTextMax, _app_gettimedescription (lpnmlv->iItem, TRUE));
 
@@ -498,10 +498,10 @@ INT_PTR CALLBACK DlgProc (
 
 				case TTN_GETDISPINFO:
 				{
-					LPNMTTDISPINFO lpnmdi;
+					LPNMTTDISPINFOW lpnmdi;
 					INT ctrl_id;
 
-					lpnmdi = (LPNMTTDISPINFO)lparam;
+					lpnmdi = (LPNMTTDISPINFOW)lparam;
 
 					if (!(lpnmdi->uFlags & TTF_IDISHWND) != 0)
 						break;
@@ -621,15 +621,26 @@ INT_PTR CALLBACK DlgProc (
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
+						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, 0);
+
+						if (string)
+						{
+							_r_obj_appendstringbuilder2 (&sb, string);
+							_r_obj_appendstringbuilder (&sb, L", ");
+
+							_r_obj_dereference (string);
+						}
+
 						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, 1);
 
 						if (string)
 						{
 							_r_obj_appendstringbuilder2 (&sb, string);
-							_r_obj_appendstringbuilder (&sb, L"\r\n");
 
 							_r_obj_dereference (string);
 						}
+
+						_r_obj_appendstringbuilder (&sb, L"\r\n");
 					}
 
 					string = _r_obj_finalstringbuilder (&sb);
