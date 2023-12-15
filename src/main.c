@@ -212,7 +212,7 @@ BOOLEAN _app_getdate (
 
 	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
 
-	status = SendDlgItemMessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
+	status = SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
 
 	return (status == GDT_VALID);
 }
@@ -236,7 +236,7 @@ VOID _app_printdate (
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-	SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
+	SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
 
 	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
@@ -321,7 +321,7 @@ INT_PTR CALLBACK DlgProc (
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
-				SendDlgItemMessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)date_format);
+				SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)date_format);
 			}
 
 			// print latest timestamp
@@ -419,43 +419,57 @@ INT_PTR CALLBACK DlgProc (
 			break;
 		}
 
-		case WM_CONTEXTMENU:
-		{
-			HMENU hmenu;
-			HMENU hsubmenu;
-
-			if (GetDlgCtrlID ((HWND)wparam) != IDC_LISTVIEW)
-				break;
-
-			// localize
-			hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
-
-			if (!hmenu)
-				break;
-
-			hsubmenu = GetSubMenu (hmenu, 0);
-
-			if (hsubmenu)
-			{
-				_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
-
-				if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
-					_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
-
-				_r_menu_popup (hsubmenu, hwnd, NULL, TRUE);
-			}
-
-			DestroyMenu (hmenu);
-
-			break;
-		}
-
 		case WM_NOTIFY:
 		{
 			LPNMHDR nmlp = (LPNMHDR)lparam;
 
 			switch (nmlp->code)
 			{
+				case NM_RCLICK:
+				{
+					LPNMITEMACTIVATE lpnmlv;
+					HMENU hmenu;
+					HMENU hsubmenu;
+					INT listview_id;
+					INT command_id;
+
+					lpnmlv = (LPNMITEMACTIVATE)lparam;
+
+					listview_id = (INT)(INT_PTR)lpnmlv->hdr.idFrom;
+
+					if (!nmlp->idFrom || lpnmlv->iItem == -1 || listview_id != IDC_LISTVIEW)
+						break;
+
+					// localize
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+
+					if (!hmenu)
+						break;
+
+					hsubmenu = GetSubMenu (hmenu, 0);
+
+					if (hsubmenu)
+					{
+						_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
+						_r_menu_setitemtext (hsubmenu, IDM_COPY_VALUE, FALSE, _r_locale_getstring (IDS_COPY_VALUE));
+
+						if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
+						{
+							_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
+							_r_menu_enableitem (hsubmenu, IDM_COPY_VALUE, MF_BYCOMMAND, FALSE);
+						}
+
+						command_id = _r_menu_popup (hsubmenu, hwnd, NULL, FALSE);
+
+						if (command_id)
+							PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), (LPARAM)lpnmlv->iSubItem);
+					}
+
+					DestroyMenu (hmenu);
+
+					break;
+				}
+
 				case DTN_USERSTRING:
 				{
 					LPNMDATETIMESTRINGW lpds;
@@ -617,7 +631,7 @@ INT_PTR CALLBACK DlgProc (
 					PR_STRING string;
 					INT item_id = -1;
 
-					_r_obj_initializestringbuilder (&sb, 512);
+					_r_obj_initializestringbuilder (&sb, 256);
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
@@ -632,6 +646,42 @@ INT_PTR CALLBACK DlgProc (
 						}
 
 						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, 1);
+
+						if (string)
+						{
+							_r_obj_appendstringbuilder2 (&sb, string);
+
+							_r_obj_dereference (string);
+						}
+
+						_r_obj_appendstringbuilder (&sb, L"\r\n");
+					}
+
+					string = _r_obj_finalstringbuilder (&sb);
+
+					_r_str_trimstring2 (string, L"\r\n ", 0);
+
+					_r_clipboard_set (hwnd, &string->sr);
+
+					_r_obj_dereference (string);
+
+					break;
+				}
+
+				case IDM_COPY_VALUE:
+				{
+					R_STRINGBUILDER sb;
+					PR_STRING string;
+					INT column_id;
+					INT item_id = -1;
+
+					column_id = (INT)lparam;
+
+					_r_obj_initializestringbuilder (&sb, 256);
+
+					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
+					{
+						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, column_id - 1);
 
 						if (string)
 						{
