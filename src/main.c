@@ -681,7 +681,7 @@ INT_PTR CALLBACK DlgProc (
 
 					while ((item_id = _r_listview_getnextselected (hwnd, IDC_LISTVIEW, item_id)) != -1)
 					{
-						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, column_id - 1);
+						string = _r_listview_getitemtext (hwnd, IDC_LISTVIEW, item_id, column_id);
 
 						if (string)
 						{
