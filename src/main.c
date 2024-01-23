@@ -212,7 +212,7 @@ BOOLEAN _app_getdate (
 
 	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
 
-	status = SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
+	status = _r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
 
 	return (status == GDT_VALID);
 }
@@ -236,7 +236,7 @@ VOID _app_printdate (
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-	SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
+	_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
 
 	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
@@ -321,7 +321,7 @@ INT_PTR CALLBACK DlgProc (
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
-				SendDlgItemMessageW (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)date_format);
+				_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)date_format);
 			}
 
 			// print latest timestamp
@@ -430,18 +430,15 @@ INT_PTR CALLBACK DlgProc (
 					LPNMITEMACTIVATE lpnmlv;
 					HMENU hmenu;
 					HMENU hsubmenu;
-					INT listview_id;
 					INT command_id;
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
-					listview_id = (INT)(INT_PTR)lpnmlv->hdr.idFrom;
-
-					if (!nmlp->idFrom || lpnmlv->iItem == -1 || listview_id != IDC_LISTVIEW)
+					if (!nmlp->idFrom || lpnmlv->iItem == -1 || lpnmlv->hdr.idFrom != IDC_LISTVIEW)
 						break;
 
 					// localize
-					hmenu = LoadMenuW (NULL, MAKEINTRESOURCE (IDM_LISTVIEW));
+					hmenu = LoadMenuW (NULL, MAKEINTRESOURCEW (IDM_LISTVIEW));
 
 					if (!hmenu)
 						break;
@@ -453,16 +450,10 @@ INT_PTR CALLBACK DlgProc (
 						_r_menu_setitemtextformat (hsubmenu, IDM_COPY, FALSE, L"%s\tCtrl+C", _r_locale_getstring (IDS_COPY));
 						_r_menu_setitemtext (hsubmenu, IDM_COPY_VALUE, FALSE, _r_locale_getstring (IDS_COPY_VALUE));
 
-						if (!_r_listview_getselectedcount (hwnd, IDC_LISTVIEW))
-						{
-							_r_menu_enableitem (hsubmenu, IDM_COPY, MF_BYCOMMAND, FALSE);
-							_r_menu_enableitem (hsubmenu, IDM_COPY_VALUE, MF_BYCOMMAND, FALSE);
-						}
-
 						command_id = _r_menu_popup (hsubmenu, hwnd, NULL, FALSE);
 
 						if (command_id)
-							PostMessageW (hwnd, WM_COMMAND, MAKEWPARAM (command_id, 0), (LPARAM)lpnmlv->iSubItem);
+							_r_wnd_sendmessage (hwnd, 0, WM_COMMAND, MAKEWPARAM (command_id, 0), (LPARAM)lpnmlv->iSubItem);
 					}
 
 					DestroyMenu (hmenu);
@@ -746,10 +737,10 @@ INT APIENTRY wWinMain (
 	if (!_r_app_initialize (NULL))
 		return ERROR_APP_INIT_FAILURE;
 
-	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCE (IDD_MAIN), MAKEINTRESOURCE (IDI_MAIN), &DlgProc);
+	hwnd = _r_app_createwindow (hinst, MAKEINTRESOURCEW (IDD_MAIN), MAKEINTRESOURCEW (IDI_MAIN), &DlgProc);
 
 	if (!hwnd)
 		return ERROR_APP_INIT_FAILURE;
 
-	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCE (IDA_MAIN));
+	return _r_wnd_message_callback (hwnd, MAKEINTRESOURCEW (IDA_MAIN));
 }
