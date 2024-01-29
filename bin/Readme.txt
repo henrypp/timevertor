@@ -5,7 +5,7 @@ RFC 822, ISO 8601, UNIX Timestamp, Mac Timestamp, Microsoft Timestamp and FILETI
 
 To activate portable mode, create "timevertor.ini" in application folder, or move it from "%APPDATA%\Henry++\TimeVertor".
 
-Website: www.henrypp.org
-Support: support@henrypp.org
+Website: https://github.com/henrypp
+Support: sforce5@mail.ru
 
 (c) 2012-2024 Henry++
