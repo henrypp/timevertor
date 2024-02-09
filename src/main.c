@@ -37,19 +37,13 @@ VOID _app_timezone2string (
 	}
 }
 
-LONG _app_getdefaultbias ()
+LONG _app_getcurrentbias ()
 {
-	RTL_TIME_ZONE_INFORMATION tzi = {0};
-	NTSTATUS status;
+	RTL_TIME_ZONE_INFORMATION tzi;
 
-	status = NtQuerySystemInformation (SystemCurrentTimeZoneInformation, &tzi, sizeof (RTL_TIME_ZONE_INFORMATION), NULL);
+	_r_sys_gettimezoneinfo (&tzi);
 
-	return tzi.Bias;
-}
-
-FORCEINLINE LONG _app_getcurrentbias ()
-{
-	return _r_config_getlong (L"TimezoneBias", _app_getdefaultbias ());
+	return _r_config_getlong (L"TimezoneBias", tzi.Bias);
 }
 
 FORCEINLINE LONG64 _app_getlastesttimestamp ()
@@ -257,6 +251,7 @@ INT_PTR CALLBACK DlgProc (
 	{
 		case WM_INITDIALOG:
 		{
+			RTL_TIME_ZONE_INFORMATION tzi;
 			SYSTEMTIME current_time;
 			SYSTEMTIME system_time;
 			WCHAR date_format[128];
@@ -282,8 +277,10 @@ INT_PTR CALLBACK DlgProc (
 					// clear menu
 					_r_menu_clearitems (hsubmenu);
 
+					_r_sys_gettimezoneinfo (&tzi);
+
 					current_bias = _app_getcurrentbias ();
-					default_bias = _app_getdefaultbias ();
+					default_bias = tzi.Bias;
 
 					for (SIZE_T i = 0; i < RTL_NUMBER_OF (int_timezones); i++)
 					{
