@@ -321,7 +321,7 @@ INT_PTR CALLBACK DlgProc (
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
-				_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETFORMAT, 0, (LPARAM)date_format);
+				_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETFORMATW, 0, (LPARAM)date_format);
 			}
 
 			// print latest timestamp
@@ -342,8 +342,8 @@ INT_PTR CALLBACK DlgProc (
 
 		case WM_DESTROY:
 		{
-			SYSTEMTIME system_time;
 			SYSTEMTIME current_time;
+			SYSTEMTIME system_time;
 
 			if (_app_getdate (hwnd, IDC_INPUT, &system_time))
 			{
@@ -434,7 +434,7 @@ INT_PTR CALLBACK DlgProc (
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
 
-					if (!nmlp->idFrom || lpnmlv->iItem == -1 || lpnmlv->hdr.idFrom != IDC_LISTVIEW)
+					if (lpnmlv->hdr.idFrom != IDC_LISTVIEW || !nmlp->idFrom || lpnmlv->iItem == -1)
 						break;
 
 					// localize
