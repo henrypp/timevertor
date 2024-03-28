@@ -206,7 +206,7 @@ BOOLEAN _app_getdate (
 
 	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
 
-	status = _r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_GETSYSTEMTIME, GDT_VALID, (LPARAM)current_time);
+	status = _r_datetime_gettime (hwnd, IDC_INPUT, current_time);
 
 	return (status == GDT_VALID);
 }
@@ -230,7 +230,7 @@ VOID _app_printdate (
 	ul.LowPart = filetime.dwLowDateTime;
 	ul.HighPart = filetime.dwHighDateTime;
 
-	_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETSYSTEMTIME, GDT_VALID, (LPARAM)system_time);
+	_r_datetime_settime (hwnd, IDC_INPUT, system_time);
 
 	for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
 	{
@@ -247,6 +247,8 @@ INT_PTR CALLBACK DlgProc (
 	_In_ LPARAM lparam
 )
 {
+	static R_LAYOUT_MANAGER layout_manager = {0};
+
 	switch (msg)
 	{
 		case WM_INITDIALOG:
@@ -313,12 +315,12 @@ INT_PTR CALLBACK DlgProc (
 				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"");
 
 			// configure datetime format
-			if (GetLocaleInfoW (LOCALE_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
-				GetLocaleInfoW (LOCALE_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format)))
+			if (GetLocaleInfoEx (LOCALE_NAME_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
+				GetLocaleInfoEx (LOCALE_NAME_USER_DEFAULT, LOCALE_STIMEFORMAT, time_format, RTL_NUMBER_OF (time_format)))
 			{
 				_r_str_appendformat (date_format, RTL_NUMBER_OF (date_format), L" %s", time_format);
 
-				_r_wnd_sendmessage (hwnd, IDC_INPUT, DTM_SETFORMATW, 0, (LPARAM)date_format);
+				_r_datetime_setformat (hwnd, IDC_INPUT, date_format);
 			}
 
 			// print latest timestamp
@@ -333,6 +335,9 @@ INT_PTR CALLBACK DlgProc (
 
 			if (htip)
 				_r_ctrl_settiptext (htip, hwnd, IDC_CURRENT, LPSTR_TEXTCALLBACK);
+
+			// initialize layout manager
+			_r_layout_initializemanager (&layout_manager, hwnd);
 
 			break;
 		}
@@ -365,6 +370,7 @@ INT_PTR CALLBACK DlgProc (
 				break;
 
 			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+			_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 			_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 
 			break;
@@ -385,6 +391,7 @@ INT_PTR CALLBACK DlgProc (
 				_r_menu_setitemtext (hmenu, 2, TRUE, _r_locale_getstring (IDS_HELP));
 				_r_menu_setitemtextformat (hmenu, IDM_EXIT, FALSE, L"%s\tEsc", _r_locale_getstring (IDS_EXIT));
 				_r_menu_setitemtext (hmenu, IDM_ALWAYSONTOP_CHK, FALSE, _r_locale_getstring (IDS_ALWAYSONTOP_CHK));
+				_r_menu_setitemtext (hmenu, IDM_DARKMODE_CHK, FALSE, _r_locale_getstring (IDS_DARKMODE_CHK));
 				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES_CHK, FALSE, _r_locale_getstring (IDS_CHECKUPDATES_CHK));
 				_r_menu_setitemtext (hmenu, IDM_WEBSITE, FALSE, _r_locale_getstring (IDS_WEBSITE));
 				_r_menu_setitemtext (hmenu, IDM_CHECKUPDATES, FALSE, _r_locale_getstring (IDS_CHECKUPDATES));
@@ -413,6 +420,24 @@ INT_PTR CALLBACK DlgProc (
 			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -39);
 			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -61);
 
+			break;
+		}
+
+		case WM_SIZE:
+		{
+			if (!_r_layout_resize (&layout_manager, wparam))
+				break;
+
+			// resize column width
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 0, NULL, -39);
+			_r_listview_setcolumn (hwnd, IDC_LISTVIEW, 1, NULL, -61);
+
+			break;
+		}
+
+		case WM_GETMINMAXINFO:
+		{
+			_r_layout_resizeminimumsize (&layout_manager, lparam);
 			break;
 		}
 
@@ -578,6 +603,19 @@ INT_PTR CALLBACK DlgProc (
 					_r_config_setboolean (L"AlwaysOnTop", new_val);
 
 					_r_wnd_top (hwnd, new_val);
+
+					break;
+				}
+
+				case IDM_DARKMODE_CHK:
+				{
+					BOOLEAN new_val;
+
+					new_val = !_r_theme_isenabled ();
+
+					_r_theme_enable (hwnd, new_val);
+
+					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
 
 					break;
 				}
