@@ -17,7 +17,7 @@
 
 typedef enum _ENUM_DATE_TYPE
 {
-	TypeRfc2822 = 0,
+	TypeRfc1123 = 0,
 	TypeIso8601 = 1,
 	TypeUnixtime = 2,
 	TypeMactime = 3,

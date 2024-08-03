@@ -13,7 +13,7 @@
 
 VOID _app_timezone2string (
 	_Out_writes_ (length) LPWSTR buffer,
-	_In_ SIZE_T length,
+	_In_ ULONG_PTR length,
 	_In_ LONG bias,
 	_In_ BOOLEAN divide,
 	_In_ LPCWSTR utcname
@@ -67,7 +67,7 @@ VOID _app_converttime (
 
 VOID _app_timeconvert (
 	_Out_writes_z_ (buffer_size) LPWSTR buffer,
-	_In_ SIZE_T buffer_size,
+	_In_ ULONG_PTR buffer_size,
 	_In_ LONG64 unixtime,
 	_In_ LONG bias,
 	_In_ LPSYSTEMTIME lpst,
@@ -79,17 +79,19 @@ VOID _app_timeconvert (
 
 	switch (type)
 	{
-		case TypeRfc2822:
+		case TypeRfc1123:
 		{
 			_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, FALSE, L"GMT");
 
 			_r_str_printf (
 				buffer,
 				buffer_size,
-				L"%s, %02d %s %04d %02d:%02d:%02d %s",
+				L"%s, %02d %s %4d %02d:%02d:%02d %s",
 				str_dayofweek[lpst->wDayOfWeek],
-				lpst->wDay, str_month[lpst->wMonth - 1],
-				lpst->wYear, lpst->wHour,
+				lpst->wDay,
+				str_month[lpst->wMonth - 1],
+				lpst->wYear,
+				lpst->wHour,
 				lpst->wMinute,
 				lpst->wSecond,
 				timezone
@@ -162,9 +164,9 @@ LPWSTR _app_gettimedescription (
 {
 	switch (type)
 	{
-		case TypeRfc2822:
+		case TypeRfc1123:
 		{
-			return _r_locale_getstring (is_desc ? IDS_FMTDESC_RFC2822 : IDS_FMTNAME_RFC2822);
+			return _r_locale_getstring (is_desc ? IDS_FMTDESC_RFC1123 : IDS_FMTNAME_RFC1123);
 		}
 
 		case TypeIso8601:
@@ -253,52 +255,11 @@ INT_PTR CALLBACK DlgProc (
 	{
 		case WM_INITDIALOG:
 		{
-			RTL_TIME_ZONE_INFORMATION tzi;
 			SYSTEMTIME current_time;
 			SYSTEMTIME system_time;
 			WCHAR date_format[128];
 			WCHAR time_format[128];
-			WCHAR menu_title[32];
-			WCHAR timezone[32];
-			HMENU hmenu;
-			HMENU hsubmenu;
 			HWND htip;
-			LONG current_bias;
-			LONG default_bias;
-			LONG bias;
-
-			// configure timezone
-			hmenu = GetMenu (hwnd);
-
-			if (hmenu)
-			{
-				hsubmenu = GetSubMenu (GetSubMenu (hmenu, 1), TIMEZONE_MENU);
-
-				if (hsubmenu)
-				{
-					// clear menu
-					_r_menu_clearitems (hsubmenu);
-
-					_r_sys_gettimezoneinfo (&tzi);
-
-					current_bias = _app_getcurrentbias ();
-					default_bias = tzi.Bias;
-
-					for (SIZE_T i = 0; i < RTL_NUMBER_OF (int_timezones); i++)
-					{
-						bias = int_timezones[i];
-
-						_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"+00:00 (UTC)");
-
-						_r_str_printf (menu_title, RTL_NUMBER_OF (menu_title), L"GMT %s", timezone);
-
-						if (bias == default_bias)
-							_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
-
-						_r_menu_additem_ex (hsubmenu, IDX_TIMEZONE + (UINT)i, menu_title, (bias == current_bias) ? MF_CHECKED : MF_UNCHECKED);
-					}
-				}
-			}
 
 			// configure listview
 			_r_listview_setstyle (
@@ -362,7 +323,14 @@ INT_PTR CALLBACK DlgProc (
 		case RM_INITIALIZE:
 		{
 			// configure menu
+			RTL_TIME_ZONE_INFORMATION tzi;
+			WCHAR menu_title[32];
+			WCHAR timezone[32];
+			HMENU hsubmenu;
 			HMENU hmenu;
+			LONG current_bias;
+			LONG default_bias;
+			LONG bias;
 
 			hmenu = GetMenu (hwnd);
 
@@ -372,6 +340,34 @@ INT_PTR CALLBACK DlgProc (
 			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
 			_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 			_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
+
+			// configure timezone
+			hsubmenu = GetSubMenu (GetSubMenu (hmenu, 1), TIMEZONE_MENU);
+
+			if (hsubmenu)
+			{
+				// clear menu
+				_r_menu_clearitems (hsubmenu);
+
+				_r_sys_gettimezoneinfo (&tzi);
+
+				current_bias = _app_getcurrentbias ();
+				default_bias = tzi.Bias;
+
+				for (ULONG_PTR i = 0; i < RTL_NUMBER_OF (int_timezones); i++)
+				{
+					bias = int_timezones[i];
+
+					_app_timezone2string (timezone, RTL_NUMBER_OF (timezone), bias, TRUE, L"+00:00 (UTC)");
+
+					_r_str_printf (menu_title, RTL_NUMBER_OF (menu_title), L"GMT %s", timezone);
+
+					if (bias == default_bias)
+						_r_str_append (menu_title, RTL_NUMBER_OF (menu_title), SYSTEM_BIAS);
+
+					_r_menu_additem_ex (hsubmenu, IDX_TIMEZONE + (UINT)i, menu_title, (bias == current_bias) ? MF_CHECKED : MF_UNCHECKED);
+				}
+			}
 
 			break;
 		}
@@ -414,6 +410,12 @@ INT_PTR CALLBACK DlgProc (
 
 			break;
 		}
+
+		//case WM_TIMECHANGE:
+		//{
+		//	_r_wnd_sendmessage (hwnd, 0, RM_INITIALIZE, 0, 0);
+		//	break;
+		//}
 
 		case WM_DPICHANGED:
 		{
