@@ -238,7 +238,7 @@ VOID _app_printdate (
 	{
 		_app_timeconvert (time_string, RTL_NUMBER_OF (time_string), unixtime, bias, system_time, &ul, i);
 
-		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, time_string);
+		_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 1, time_string, I_DEFAULT, I_DEFAULT, I_DEFAULT);
 	}
 }
 
@@ -273,7 +273,7 @@ INT_PTR CALLBACK DlgProc (
 			_r_listview_addcolumn (hwnd, IDC_LISTVIEW, 2, NULL, -61, LVCFMT_RIGHT);
 
 			for (INT i = 0; i < TypeMax; i++)
-				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"");
+				_r_listview_additem (hwnd, IDC_LISTVIEW, i, L"", I_DEFAULT, I_DEFAULT, I_DEFAULT);
 
 			// configure datetime format
 			if (GetLocaleInfoEx (LOCALE_NAME_USER_DEFAULT, LOCALE_SLONGDATE, date_format, RTL_NUMBER_OF (date_format)) &&
@@ -406,7 +406,9 @@ INT_PTR CALLBACK DlgProc (
 
 			// configure listview
 			for (ENUM_DATE_TYPE i = 0; i < TypeMax; i++)
-				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription (i, FALSE));
+			{
+				_r_listview_setitem (hwnd, IDC_LISTVIEW, i, 0, _app_gettimedescription (i, FALSE), I_DEFAULT, I_DEFAULT, I_DEFAULT);
+			}
 
 			break;
 		}
