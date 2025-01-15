@@ -375,8 +375,8 @@ INT_PTR CALLBACK DlgProc (
 		case RM_LOCALIZE:
 		{
 			// configure menu
-			HMENU hmenu;
 			HMENU hsubmenu;
+			HMENU hmenu;
 
 			hmenu = GetMenu (hwnd);
 
@@ -454,8 +454,8 @@ INT_PTR CALLBACK DlgProc (
 				case NM_RCLICK:
 				{
 					LPNMITEMACTIVATE lpnmlv;
-					HMENU hmenu;
 					HMENU hsubmenu;
+					HMENU hmenu;
 					INT command_id;
 
 					lpnmlv = (LPNMITEMACTIVATE)lparam;
