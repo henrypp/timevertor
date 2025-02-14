@@ -43,12 +43,12 @@ LONG _app_getcurrentbias ()
 
 	_r_sys_gettimezoneinfo (&tzi);
 
-	return _r_config_getlong (L"TimezoneBias", tzi.Bias);
+	return _r_config_getlong (L"TimezoneBias", tzi.Bias, NULL);
 }
 
 FORCEINLINE LONG64 _app_getlastesttimestamp ()
 {
-	return _r_config_getlong64 (L"LatestTimestamp", _r_unixtime_now ());
+	return _r_config_getlong64 (L"LatestTimestamp", _r_unixtime_now (), NULL);
 }
 
 VOID _app_converttime (
@@ -312,7 +312,7 @@ INT_PTR CALLBACK DlgProc (
 			{
 				_app_converttime (&system_time, 0, &current_time);
 
-				_r_config_setlong64 (L"LatestTimestamp", _r_unixtime_from_systemtime (&current_time));
+				_r_config_setlong64 (L"LatestTimestamp", _r_unixtime_from_systemtime (&current_time), NULL);
 			}
 
 			PostQuitMessage (0);
@@ -337,7 +337,7 @@ INT_PTR CALLBACK DlgProc (
 			if (!hmenu)
 				break;
 
-			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE));
+			_r_menu_checkitem (hmenu, IDM_ALWAYSONTOP_CHK, 0, MF_BYCOMMAND, _r_config_getboolean (L"AlwaysOnTop", FALSE, NULL));
 			_r_menu_checkitem (hmenu, IDM_DARKMODE_CHK, 0, MF_BYCOMMAND, _r_theme_isenabled ());
 			_r_menu_checkitem (hmenu, IDM_CHECKUPDATES_CHK, 0, MF_BYCOMMAND, _r_update_isenabled (FALSE));
 
@@ -570,7 +570,7 @@ INT_PTR CALLBACK DlgProc (
 				idx = ctrl_id - IDX_TIMEZONE;
 				bias = int_timezones[idx];
 
-				_r_config_setlong (L"TimezoneBias", bias);
+				_r_config_setlong (L"TimezoneBias", bias, NULL);
 
 				submenu_timezone = GetSubMenu (GetSubMenu (GetMenu (hwnd), 1), TIMEZONE_MENU);
 
@@ -600,11 +600,11 @@ INT_PTR CALLBACK DlgProc (
 				{
 					BOOLEAN new_val;
 
-					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE);
+					new_val = !_r_config_getboolean (L"AlwaysOnTop", FALSE, NULL);
 
 					_r_menu_checkitem (GetMenu (hwnd), ctrl_id, 0, MF_BYCOMMAND, new_val);
 
-					_r_config_setboolean (L"AlwaysOnTop", new_val);
+					_r_config_setboolean (L"AlwaysOnTop", new_val, NULL);
 
 					_r_wnd_top (hwnd, new_val);
 
