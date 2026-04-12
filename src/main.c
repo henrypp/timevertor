@@ -285,7 +285,7 @@ INT_PTR CALLBACK DlgProc (
 			}
 
 			// print latest timestamp
-			_r_unixtime_to_systemtime (_app_getlastesttimestamp (), &current_time);
+			_r_unixtime_to_systemtime (&current_time, _app_getlastesttimestamp ());
 
 			_app_converttime (&current_time, 0, &system_time);
 
@@ -497,7 +497,7 @@ INT_PTR CALLBACK DlgProc (
 					_r_obj_initializestringref (&user_string, (LPWSTR)lpds->pszUserString);
 
 					if (_r_str_isnumeric (&user_string))
-						_r_unixtime_to_systemtime (_r_str_tolong64 (&user_string), &lpds->st);
+						_r_unixtime_to_systemtime (&lpds->st, _r_str_tolong64 (&user_string));
 
 					break;
 				}
