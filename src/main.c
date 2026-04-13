@@ -1,5 +1,5 @@
 // TimeVertor
-// Copyright (c) 2012-2025 Henry++
+// Copyright (c) 2012-2026 Henry++
 
 #include "routine.h"
 
@@ -205,8 +205,6 @@ BOOLEAN _app_getdate (
 )
 {
 	LRESULT status;
-
-	RtlZeroMemory (current_time, sizeof (SYSTEMTIME));
 
 	status = _r_datetime_gettime (hwnd, IDC_INPUT, current_time);
 
