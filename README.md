@@ -23,8 +23,9 @@ To activate portable mode, create "timevertor.ini" in application folder, or mov
 ```
 
 ### System requirements:
-- Windows 8.1 and above operating system.
-- [Visual C++ 2022 Redistributable package](https://learn.microsoft.com/en-us/cpp/windows/latest-supported-vc-redist?view=msvc-170)
+- Windows 7, 8, 8.1, 10, 11 64-bit/ARM64
+- An SSE2-capable CPU
+- <s>KB2533623</s> [KB3063858](https://www.microsoft.com/en-us/download/details.aspx?id=47442) update for Windows 7 was required
 
 ### Donate:
 - [Bitcoin](https://www.blockchain.com/btc/address/1LrRTXPsvHcQWCNZotA9RcwjsGcRghG96c) (BTC)
